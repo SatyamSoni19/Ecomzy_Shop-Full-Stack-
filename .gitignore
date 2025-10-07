@@ -1,0 +1,9 @@
+# Node modules
+prac1/node_modules/
+prac1_BackEnd/node_modules/
+
+# Environment files
+prac1_BackEnd/.env
+
+# Build files
+prac1/dist/
