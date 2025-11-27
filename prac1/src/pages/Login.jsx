@@ -2,17 +2,18 @@ import React, { useState, useContext } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AppContext } from "../context/AppContext";
+import { FaEnvelope, FaLock, FaArrowRight } from "react-icons/fa";
 
 const Login = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
   const { setUser } = useContext(AppContext);
   const [formData, setFormData] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(false);
 
   const changeHandler = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Make this async
   const submitHandler = async (e) => {
     e.preventDefault();
 
@@ -20,6 +21,8 @@ const Login = ({ setIsAuthenticated }) => {
       toast.error("Please fill all fields!");
       return;
     }
+
+    setLoading(true);
 
     try {
       const response = await fetch("http://localhost:4000/api/v1/login", {
@@ -33,17 +36,12 @@ const Login = ({ setIsAuthenticated }) => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Login Successful 🎉");
-
-        // Token save in localStorage
+        toast.success("Welcome back! 🚀");
         localStorage.setItem("token", data.token);
-
-        // Save user data to context and localStorage
         if (data.user) {
           setUser(data.user);
           localStorage.setItem("user", JSON.stringify(data.user));
         }
-
         setIsAuthenticated(true);
         navigate("/");
       } else {
@@ -51,49 +49,87 @@ const Login = ({ setIsAuthenticated }) => {
       }
     } catch (err) {
       toast.error("Invalid email or password!");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ✅ Return should be inside the component
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-400 via-blue-500 to-purple-600">
-      <div className="bg-white/20 backdrop-blur-xl rounded-2xl shadow-2xl w-[90%] sm:w-[400px] p-8 animate-fadeIn">
-        <h1 className="text-3xl font-bold text-center text-white mb-6 drop-shadow-md">
-          Welcome Back 👋
-        </h1>
-        <form className="flex flex-col gap-4" onSubmit={submitHandler}>
-          <input
-            type="email"
-            name="email"
-            placeholder="Enter your email"
-            value={formData.email}
-            onChange={changeHandler}
-            className="px-4 py-3 rounded-xl border border-transparent focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Enter your password"
-            value={formData.password}
-            onChange={changeHandler}
-            className="px-4 py-3 rounded-xl border border-transparent focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-600/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
+      <div className="absolute top-[-10%] right-[-10%] w-96 h-96 bg-blue-600/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+      <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-pink-600/30 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000"></div>
+
+      <div className="relative z-10 w-full max-w-md p-8 bg-gray-800/50 backdrop-blur-xl rounded-2xl border border-gray-700 shadow-2xl transform transition-all hover:scale-[1.01]">
+        <div className="mb-8 text-center">
+          <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2">
+            Welcome Back
+          </h1>
+          <p className="text-gray-400">Sign in to continue your journey</p>
+        </div>
+
+        <form className="space-y-6" onSubmit={submitHandler}>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300 ml-1">Email Address</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaEnvelope className="text-gray-500 group-focus-within:text-blue-400 transition-colors" />
+              </div>
+              <input
+                type="email"
+                name="email"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={changeHandler}
+                className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-600 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-300 ml-1">Password</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <FaLock className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+              </div>
+              <input
+                type="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={changeHandler}
+                className="w-full pl-10 pr-4 py-3 bg-gray-900/50 border border-gray-600 rounded-xl text-gray-100 placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200"
+              />
+            </div>
+          </div>
+
           <button
             type="submit"
-            className="bg-gradient-to-r from-green-500 to-green-700 text-white font-semibold py-3 rounded-xl hover:scale-105 transition-transform duration-200 shadow-lg"
+            disabled={loading}
+            className="w-full group relative flex justify-center items-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:-translate-y-0.5 shadow-lg hover:shadow-blue-500/30"
           >
-            Login
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                Sign In <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+              </>
+            )}
           </button>
         </form>
-        <p className="text-center text-white mt-6">
-          Don't have an account?{" "}
-          <NavLink
-            to="/signup"
-            className="text-yellow-300 font-bold hover:underline"
-          >
-            Sign Up
-          </NavLink>
-        </p>
+
+        <div className="mt-8 text-center">
+          <p className="text-gray-400 text-sm">
+            Don't have an account?{" "}
+            <NavLink
+              to="/signup"
+              className="font-bold text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              Create Account
+            </NavLink>
+          </p>
+        </div>
       </div>
     </div>
   );
