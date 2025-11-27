@@ -25,11 +25,22 @@ function Products({ product }) {
   const isAlreadyLiked = like.some((item) => item.id === product.id);
   // Agr Like me product already hoga to iske value true varna false
 
+  const handleDoubleClick = () => {
+    if (isAlreadyLiked) {
+      dispatch(removeDislike({ id: product.id }));
+      toast.warn("Item disliked!")
+    } else {
+      dispatch(addLike(product));
+      toast.info("Item liked!")
+    }
+  };
 
   return (
-    <div className="flex flex-col items-center justify-between 
+    <div
+      className="flex flex-col items-center justify-between 
       hover:scale-110 transition duration-300 ease-in gap-3 p-4 mt-10 ml-5 
-      rounded-xl border-[2px] border-gray-300 shadow-lg cursor-pointer">
+      rounded-xl border-[2px] border-gray-300 shadow-lg cursor-pointer"
+      onDoubleClick={handleDoubleClick}>
       <div>
         <p className="text-gray-700 font-semibold text-lg text-left truncate w-40 mt-1">{product.title}</p>
       </div>
@@ -55,23 +66,23 @@ function Products({ product }) {
           }}>
           {isAlreadyLiked ? (<FcLike className="text-2xl" />) : (<AiOutlineHeart className="text-2xl" />)}
         </div>
-      <div>
-        <button
-          onClick={() => {
-            if (isAddedToCart) {
-              dispatch(remove({ id: product.id }));
-              toast.error("Item Removed!")
-            } else {
-              dispatch(add(product));
-              toast.success("Item Added to cart!")
-            }
-          }}
-          className="cursor-pointer">
-          {isAddedToCart ? (<IoCartSharp className="text-2xl" />) : (<IoCartOutline className="text-2xl" />)}
-        </button>
-      </div>
+        <div>
+          <button
+            onClick={() => {
+              if (isAddedToCart) {
+                dispatch(remove({ id: product.id }));
+                toast.error("Item Removed!")
+              } else {
+                dispatch(add(product));
+                toast.success("Item Added to cart!")
+              }
+            }}
+            className="cursor-pointer">
+            {isAddedToCart ? (<IoCartSharp className="text-2xl" />) : (<IoCartOutline className="text-2xl" />)}
+          </button>
+        </div>
 
-    </div>  
+      </div>
     </div >
   )
 }

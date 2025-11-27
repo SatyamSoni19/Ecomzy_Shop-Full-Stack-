@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { toast } from "react-toastify";
+import { AppContext } from "../context/AppContext";
 
 const Login = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
+  const { setUser } = useContext(AppContext);
   const [formData, setFormData] = useState({ email: "", password: "" });
 
   const changeHandler = (e) => {
@@ -35,6 +37,12 @@ const Login = ({ setIsAuthenticated }) => {
 
         // Token save in localStorage
         localStorage.setItem("token", data.token);
+
+        // Save user data to context and localStorage
+        if (data.user) {
+          setUser(data.user);
+          localStorage.setItem("user", JSON.stringify(data.user));
+        }
 
         setIsAuthenticated(true);
         navigate("/");
@@ -78,7 +86,7 @@ const Login = ({ setIsAuthenticated }) => {
           </button>
         </form>
         <p className="text-center text-white mt-6">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <NavLink
             to="/signup"
             className="text-yellow-300 font-bold hover:underline"

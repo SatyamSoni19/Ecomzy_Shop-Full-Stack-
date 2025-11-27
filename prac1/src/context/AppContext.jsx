@@ -7,6 +7,7 @@ export default function AppContextProvider({ children }) {
     const [loading, setLoading] = useState(false);
     const [products, setProducts] = useState([]);
     const [selectedCategories, setSelectedCategories] = useState([]); // ✅ multiple selected categories
+    const [user, setUser] = useState(null); // ✅ user data from backend
 
     // API Fetch Function
     async function fetchProductData() {
@@ -36,7 +37,9 @@ export default function AppContextProvider({ children }) {
         loading,
         products: filteredProducts,
         selectedCategories,
-        setSelectedCategories
+        setSelectedCategories,
+        user,
+        setUser
     };
 
     return (
