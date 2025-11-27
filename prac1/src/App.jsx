@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -10,16 +10,21 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import { AppContext } from './context/AppContext';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { theme } = useContext(AppContext);
 
   return (
-    <div>
+    <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark'
+        ? 'bg-slate-900 text-gray-100'
+        : 'bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900'
+      }`}>
       {/* Navbar sirf tab dikhao jab login ho chuka ho */}
       {isAuthenticated && (
-        <div className="bg-slate-900 sticky top-0 z-50">
-          <Navbar setIsAuthenticated={setIsAuthenticated}/>
+        <div className={`sticky top-0 z-50 ${theme === 'dark' ? 'bg-slate-900' : 'bg-white/80 backdrop-blur-sm'}`}>
+          <Navbar setIsAuthenticated={setIsAuthenticated} />
         </div>
       )}
 
@@ -43,7 +48,7 @@ function App() {
       </Routes>
 
       {/* Toaster container */}
-      <ToastContainer position="top-center" autoClose={2000} theme="dark" />
+      <ToastContainer position="top-center" autoClose={2000} theme={theme === 'dark' ? 'dark' : 'light'} />
     </div>
   );
 }

@@ -8,6 +8,10 @@ export default function AppContextProvider({ children }) {
     const [products, setProducts] = useState([]);
     const [selectedCategories, setSelectedCategories] = useState([]); // ✅ multiple selected categories
     const [user, setUser] = useState(null); // ✅ user data from backend
+    const [theme, setTheme] = useState(() => {
+        // Load theme from localStorage or default to 'dark'
+        return localStorage.getItem('theme') || 'dark';
+    });
 
     // API Fetch Function
     async function fetchProductData() {
@@ -27,6 +31,16 @@ export default function AppContextProvider({ children }) {
         fetchProductData();
     }, []);
 
+    // ✅ Persist theme to localStorage
+    useEffect(() => {
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    // ✅ Toggle theme function
+    const toggleTheme = () => {
+        setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
+    };
+
     // ✅ Filter logic
     const filteredProducts =
         selectedCategories.length > 0
@@ -39,7 +53,9 @@ export default function AppContextProvider({ children }) {
         selectedCategories,
         setSelectedCategories,
         user,
-        setUser
+        setUser,
+        theme,
+        toggleTheme
     };
 
     return (

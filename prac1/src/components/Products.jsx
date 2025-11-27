@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { AiOutlineHeart } from "react-icons/ai";
 import { FcLike } from "react-icons/fc";
 import { IoCartOutline, IoCartSharp } from "react-icons/io5";
@@ -6,9 +6,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { add, remove } from "../routes/slices/CartSlice";
 import { addLike, removeDislike } from "../routes/slices/LikeSlice";
 import { toast } from "react-toastify";
+import { AppContext } from "../context/AppContext";
 
 function Products({ product }) {
-
+  const { theme } = useContext(AppContext);
   const [isLiked, setisLiked] = useState(false);
   const dispatch = useDispatch();
 
@@ -35,20 +36,26 @@ function Products({ product }) {
     }
   };
 
+  // Theme classes
+  const cardBgClass = theme === 'dark' ? 'bg-slate-800 border-slate-700 shadow-slate-900/50' : 'bg-white border-gray-300 shadow-lg';
+  const titleClass = theme === 'dark' ? 'text-gray-200' : 'text-gray-700';
+  const descClass = theme === 'dark' ? 'text-gray-400' : 'text-gray-400';
+  const iconColorClass = theme === 'dark' ? 'text-gray-200' : 'text-gray-800';
+
   return (
     <div
-      className="flex flex-col items-center justify-between 
+      className={`flex flex-col items-center justify-between 
       hover:scale-110 transition duration-300 ease-in gap-3 p-4 mt-10 ml-5 
-      rounded-xl border-[2px] border-gray-300 shadow-lg cursor-pointer"
+      rounded-xl border-[2px] cursor-pointer ${cardBgClass}`}
       onDoubleClick={handleDoubleClick}>
       <div>
-        <p className="text-gray-700 font-semibold text-lg text-left truncate w-40 mt-1">{product.title}</p>
+        <p className={`${titleClass} font-semibold text-lg text-left truncate w-40 mt-1`}>{product.title}</p>
       </div>
       <div>
-        <p className="w-40 text-gray-400 font-normal text-[10px] text-left">{product.description.split(" ").slice(0, 10).join(" ") + "..."}</p>
+        <p className={`w-40 ${descClass} font-normal text-[10px] text-left`}>{product.description.split(" ").slice(0, 10).join(" ") + "..."}</p>
       </div>
       <div className="h-[180px]">
-        <img src={product.image} className="h-full w-full " />
+        <img src={product.image} className="h-full w-full object-contain" />
       </div>
       <div className="flex justify-between gap-12 items-center w-full mt-5">
         <div>
@@ -63,7 +70,8 @@ function Products({ product }) {
               dispatch(addLike(product));
               toast.info("Item liked!")
             }
-          }}>
+          }}
+          className={iconColorClass}>
           {isAlreadyLiked ? (<FcLike className="text-2xl" />) : (<AiOutlineHeart className="text-2xl" />)}
         </div>
         <div>
@@ -77,7 +85,7 @@ function Products({ product }) {
                 toast.success("Item Added to cart!")
               }
             }}
-            className="cursor-pointer">
+            className={`cursor-pointer ${iconColorClass}`}>
             {isAddedToCart ? (<IoCartSharp className="text-2xl" />) : (<IoCartOutline className="text-2xl" />)}
           </button>
         </div>
