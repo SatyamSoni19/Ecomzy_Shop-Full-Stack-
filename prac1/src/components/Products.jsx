@@ -36,6 +36,12 @@ function Products({ product }) {
     }
   };
 
+  const handleProductClick = () => {
+    if (product.productUrl) {
+      window.open(product.productUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   // Theme classes
   const cardBgClass = theme === 'dark' ? 'bg-slate-800 border-slate-700 shadow-slate-900/50' : 'bg-white border-gray-300 shadow-lg';
   const titleClass = theme === 'dark' ? 'text-gray-200' : 'text-gray-700';
@@ -46,16 +52,16 @@ function Products({ product }) {
     <div
       className={`flex flex-col items-center justify-between 
       hover:scale-110 transition duration-300 ease-in gap-3 p-4 mt-10 ml-5 
-      rounded-xl border-[2px] cursor-pointer ${cardBgClass}`}
+      rounded-xl border-[2px] ${cardBgClass}`}
       onDoubleClick={handleDoubleClick}>
-      <div>
-        <p className={`${titleClass} font-semibold text-lg text-left truncate w-40 mt-1`}>{product.title}</p>
+      <div onClick={handleProductClick} className="cursor-pointer w-full">
+        <p className={`${titleClass} font-semibold text-lg text-left truncate w-40 mt-1 hover:underline`}>{product.title}</p>
       </div>
       <div>
         <p className={`w-40 ${descClass} font-normal text-[10px] text-left`}>{product.description.split(" ").slice(0, 10).join(" ") + "..."}</p>
       </div>
-      <div className="h-[180px]">
-        <img src={product.image} className="h-full w-full object-contain" />
+      <div className="h-[180px] cursor-pointer" onClick={handleProductClick}>
+        <img src={product.image} className="h-full w-full object-contain" alt={product.title} />
       </div>
       <div className="flex justify-between gap-12 items-center w-full mt-5">
         <div>
@@ -71,7 +77,7 @@ function Products({ product }) {
               toast.info("Item liked!")
             }
           }}
-          className={iconColorClass}>
+          className={`cursor-pointer ${iconColorClass}`}>
           {isAlreadyLiked ? (<FcLike className="text-2xl" />) : (<AiOutlineHeart className="text-2xl" />)}
         </div>
         <div>

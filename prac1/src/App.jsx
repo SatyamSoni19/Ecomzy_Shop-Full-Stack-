@@ -11,6 +11,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { AppContext } from './context/AppContext';
+import Chatbot from './components/Chatbot';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -18,8 +19,8 @@ function App() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark'
-        ? 'bg-slate-900 text-gray-100'
-        : 'bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900'
+      ? 'bg-slate-900 text-gray-100'
+      : 'bg-gradient-to-br from-gray-50 to-blue-50 text-gray-900'
       }`}>
       {/* Navbar sirf tab dikhao jab login ho chuka ho */}
       {isAuthenticated && (
@@ -49,6 +50,9 @@ function App() {
 
       {/* Toaster container */}
       <ToastContainer position="top-center" autoClose={2000} theme={theme === 'dark' ? 'dark' : 'light'} />
+
+      {/* AI Chatbot - Only visible when logged in */}
+      {isAuthenticated && <Chatbot />}
     </div>
   );
 }
