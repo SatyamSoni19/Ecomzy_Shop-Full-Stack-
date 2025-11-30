@@ -30,6 +30,7 @@ const Login = ({ setIsAuthenticated }) => {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Enable cookies
         body: JSON.stringify(formData),
       });
 

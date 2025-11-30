@@ -6,8 +6,9 @@ import { IoIosMenu } from "react-icons/io";
 import { MdCheck } from "react-icons/md";
 import { NavLink, useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
+import { toast } from 'react-toastify';
 
-const Navbar = () => {
+const Navbar = ({ setIsAuthenticated }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -17,7 +18,28 @@ const Navbar = () => {
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
 
-  const { selectedCategories, setSelectedCategories, user, theme, toggleTheme } = useContext(AppContext);
+  const { selectedCategories, setSelectedCategories, user, setUser, theme, toggleTheme } = useContext(AppContext);
+
+  // Logout Handler
+  const handleLogout = async () => {
+    try {
+      await fetch("http://localhost:4000/api/v1/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setUser(null);
+      setIsAuthenticated(false);
+
+      toast.success("Logged out successfully!");
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed", error);
+      toast.error("Logout failed!");
+    }
+  };
 
   const menuClickHandler = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -219,8 +241,9 @@ const Navbar = () => {
                     {theme === 'dark' ? <FaMoon className="text-sm" /> : <FaSun className="text-sm text-yellow-500" />}
                   </button>
 
-                  {/* Logout Button (Non-functional) */}
+                  {/* Logout Button */}
                   <button
+                    onClick={handleLogout}
                     className="w-full text-left px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-all duration-200 font-semibold text-white mt-2"
                   >
                     Logout

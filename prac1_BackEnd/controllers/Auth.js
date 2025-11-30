@@ -2,6 +2,7 @@
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const validator = require("validator");
 require("dotenv").config();
 
 // SignUp Handler & Export
@@ -12,6 +13,23 @@ exports.signup = async (req, res) => {
         // data from req ki body
         const { name, email, password } = req.body;
 
+        // Validation
+        if (!name || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "All fields are required"
+            })
+        }
+
+        // Validate Email Format
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Email Format."
+            })
+
+        }
+
         // Check ki phle se to entry nhi padi db me
         const existingUser = await User.findOne({ email });
 
@@ -19,6 +37,22 @@ exports.signup = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'User Already Exist',
+            })
+        }
+
+        // Validate Password Format
+        const isRightPassword = validator.isStrongPassword(password, {
+            minLength: 6,
+            minUppercase: 1,
+            minLowercase: 1,
+            minNumbers: 1,
+            minSymbols: 1,
+        })
+
+        if (!isRightPassword) {
+            return res.status(400).json({
+                success: false,
+                message: "Min length: 6, Min UpprCase: 1, Min LowerCase: 1, Min Numbers: 1, Min Symbol: 1, Check Again!!"
             })
         }
 
@@ -44,14 +78,13 @@ exports.signup = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            data: user,
-            message: 'Entry Created Successfully',
+            message: 'Signed Up Successfully',
         })
 
     } catch (error) {
         return res.status(400).json({
             success: false,
-            message: error.message,
+            message: error,
         })
     }
 
@@ -73,13 +106,21 @@ exports.login = async (req, res) => {
             })
         }
 
+        // Validate the Email
+        if (!validator.isEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Email Format."
+            })
+        }
+
         // Check if User ne signup kiya h ki nhi
         let user = await User.findOne({ email });
 
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: 'Phle signup to krle',
+                message: 'First Sign Up!',
             })
         }
 
@@ -92,14 +133,19 @@ exports.login = async (req, res) => {
             }
 
             const token = jwt.sign(payload, process.env.JWT_SECRET, {
-                expiresIn: "2h",
+                expiresIn: "3d",
             })
 
             user = user.toObject();
             user.token = token;
             user.password = undefined;
 
-            return res.status(200).json({
+            const options = {
+                expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                httpOnly: true
+            }
+
+            return res.cookie("token", token, options).status(200).json({
                 success: true,
                 token,
                 user,
@@ -119,7 +165,46 @@ exports.login = async (req, res) => {
     catch (error) {
         res.status(403).json({
             success: false,
-            message: error.message,
+            message: error,
+        })
+    }
+
+}
+
+// Logout Handler
+exports.logout = async (req, res) => {
+
+    try {
+
+        // First Check If the User Is Logged In or Already Logged Out
+        if (!req.cookies.token) {
+            // It means user is already logged out
+            return res.status(400).json({
+                success: false,
+                message: "User Already Logged Out"
+            })
+        }
+
+        else {
+            // Now To Log Out, Clear the Token Inside the Cookie
+            res.clearCookie("token", {
+                httpOnly: true,
+                secure: false
+            });
+
+            console.log(`Log Out ke bad ka cookie: ${req.cookies}`)
+
+            return res.status(200).json({
+                success: true,
+                message: "Logged Out Successfully"
+            })
+
+        }
+
+    } catch (error) {
+        return res.status(400).json({
+            success: false,
+            message: error
         })
     }
 

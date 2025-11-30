@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Route, Routes, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
@@ -15,7 +15,29 @@ import Chatbot from './components/Chatbot';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const { theme } = useContext(AppContext);
+  const [loading, setLoading] = useState(true);
+  const { theme, setUser } = useContext(AppContext);
+
+  // Check for existing token on mount (Persistent Login)
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
+
+    if (token && user) {
+      setIsAuthenticated(true);
+      setUser(JSON.parse(user));
+    }
+    setLoading(false);
+  }, [setUser]);
+
+  // Show loading spinner while checking authentication
+  if (loading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${theme === 'dark' ? 'bg-slate-900' : 'bg-gray-50'}`}>
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark'
@@ -31,8 +53,8 @@ function App() {
 
       <Routes>
         {/* Login aur Signup me setIsAuthenticated pass karo */}
-        <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/" />} />
+        <Route path="/signup" element={!isAuthenticated ? <Signup /> : <Navigate to="/" />} />
 
         {/* Agar login nahi hai to redirect login pe */}
         <Route

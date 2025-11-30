@@ -3,12 +3,13 @@ const express = require('express');
 const router = express.Router();
 
 // Import Controller
-const {login, signup} = require("../controllers/Auth");
+const {login, signup, logout} = require("../controllers/Auth");
 const {auth} = require("../middlewares/auth");
 
 // Define Routes
 router.post("/login", login)
 router.post("/signup", signup)
+router.post("/logout", logout)
 
 router.get("/profile", auth, (req, res) => {
     res.status(200).json({
