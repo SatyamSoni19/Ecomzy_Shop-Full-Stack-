@@ -23,7 +23,7 @@ const Navbar = ({ setIsAuthenticated }) => {
   // Logout Handler
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:4000/api/v1/logout", {
+      await fetch("https://ecomzy-shop-full-stack.onrender.com/api/v1/logout", {
         method: "POST",
         credentials: "include"
       });
