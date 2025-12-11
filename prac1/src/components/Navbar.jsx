@@ -14,6 +14,8 @@ const Navbar = ({ setIsAuthenticated }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
+  const [contactFormData, setContactFormData] = useState({ name: '', email: '', message: '' });
+  const [contactLoading, setContactLoading] = useState(false);
   const filterRef = useRef(null);
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
@@ -38,6 +40,46 @@ const Navbar = ({ setIsAuthenticated }) => {
     } catch (error) {
       console.error("Logout failed", error);
       toast.error("Logout failed!");
+    }
+  };
+
+  // Contact Form Handler
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+
+    const { name, email, message } = contactFormData;
+
+    // Validation
+    if (!name || !email || !message) {
+      toast.error('Please fill all fields!');
+      return;
+    }
+
+    setContactLoading(true);
+
+    try {
+      const response = await fetch('https://ecomzy-shop-full-stack.onrender.com/api/v1/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(contactFormData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(data.message || 'Message sent successfully!');
+        setContactFormData({ name: '', email: '', message: '' });
+        setShowContactModal(false);
+      } else {
+        toast.error(data.message || 'Failed to send message');
+      }
+    } catch (error) {
+      console.error('Contact form error:', error);
+      toast.error('Failed to send message. Please try again later.');
+    } finally {
+      setContactLoading(false);
     }
   };
 
@@ -356,6 +398,14 @@ const Navbar = ({ setIsAuthenticated }) => {
             <p className="leading-relaxed opacity-90">
               Thank you for choosing us for your shopping needs!
             </p>
+
+            {/* Creator Section */}
+            <div className={`mt-6 pt-4 border-t ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'}`}>
+              <p className="text-sm opacity-75 mb-2">Created by</p>
+              <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                SATYAM SONI
+              </p>
+            </div>
           </div>
         </div>,
         document.body
@@ -372,12 +422,15 @@ const Navbar = ({ setIsAuthenticated }) => {
               <IoClose className="text-2xl" />
             </button>
             <h2 className="text-3xl font-bold mb-6">Contact Us</h2>
-            <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setShowContactModal(false); }}>
+            <form className="space-y-4" onSubmit={handleContactSubmit}>
               <div>
                 <label className="block text-sm font-medium mb-1 opacity-90">Name</label>
                 <input
                   type="text"
                   placeholder="Your name"
+                  value={contactFormData.name}
+                  onChange={(e) => setContactFormData({ ...contactFormData, name: e.target.value })}
+                  required
                   className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400 ${inputBgClass}`}
                 />
               </div>
@@ -386,6 +439,9 @@ const Navbar = ({ setIsAuthenticated }) => {
                 <input
                   type="email"
                   placeholder="Your email"
+                  value={contactFormData.email}
+                  onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
+                  required
                   className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400 ${inputBgClass}`}
                 />
               </div>
@@ -394,14 +450,25 @@ const Navbar = ({ setIsAuthenticated }) => {
                 <textarea
                   placeholder="Your message"
                   rows="4"
+                  value={contactFormData.message}
+                  onChange={(e) => setContactFormData({ ...contactFormData, message: e.target.value })}
+                  required
                   className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none ${inputBgClass}`}
                 ></textarea>
               </div>
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 rounded-lg hover:scale-105 transition-transform duration-200 shadow-lg"
+                disabled={contactLoading}
+                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 rounded-lg hover:scale-105 transition-transform duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
               >
-                Send Message
+                {contactLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Sending...
+                  </div>
+                ) : (
+                  'Send Message'
+                )}
               </button>
             </form>
           </div>

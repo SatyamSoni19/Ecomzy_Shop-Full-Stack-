@@ -156,152 +156,162 @@ const Chatbot = () => {
     const inputBgClass = theme === 'dark' ? 'bg-slate-700 text-white' : 'bg-gray-100 text-gray-800';
 
     return (
-        <div className="fixed bottom-4 sm:bottom-6 right-0 sm:right-6 left-0 sm:left-auto z-50 font-sans px-2 sm:px-0">
-            {/* Chat Window */}
+        <>
+            {/* Backdrop Blur Overlay */}
             {isOpen && (
-                <div className={`mb-4 w-full sm:w-[380px] md:w-[400px] h-[calc(100vh-120px)] sm:h-[500px] md:h-[550px] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp border ${bgClass} ${borderClass}`}>
-                    {/* Header */}
-                    <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 sm:p-4 flex justify-between items-center text-white">
-                        <div className="flex items-center gap-2">
-                            <div className="bg-white/20 p-1.5 sm:p-2 rounded-full">
-                                <FaRobot className="text-lg sm:text-xl" />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-xs sm:text-sm">AI Stylist</h3>
-                                <p className="text-[10px] sm:text-xs opacity-80">Always online</p>
-                            </div>
-                        </div>
-                        <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded-full transition">
-                            <FaTimes className="text-lg sm:text-xl" />
-                        </button>
-                    </div>
+                <div
+                    className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
 
-                    {/* Messages Area */}
-                    <div className={`flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 ${theme === 'dark' ? 'bg-slate-900/50' : 'bg-gray-50'}`}>
-                        {messages.map((msg, index) => (
-                            <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[90%] sm:max-w-[85%] rounded-2xl p-2 sm:p-3 text-xs sm:text-sm ${msg.sender === 'user'
-                                    ? 'bg-blue-600 text-white rounded-br-none'
-                                    : `${theme === 'dark' ? 'bg-slate-700 text-gray-100' : 'bg-white text-gray-800 border border-gray-200'} rounded-bl-none shadow-sm`
-                                    }`}>
-                                    <p className="whitespace-pre-line">{msg.text}</p>
-
-                                    {/* Product Recommendations */}
-                                    {msg.products && (
-                                        <div className="mt-2 sm:mt-3 space-y-1.5 sm:space-y-2">
-                                            {msg.products.map(product => (
-                                                <div
-                                                    key={product.id}
-                                                    className={`flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-50'}`}
-                                                >
-                                                    <img src={product.image} alt={product.title} className="w-10 h-10 sm:w-12 sm:h-12 object-contain bg-white rounded flex-shrink-0" />
-                                                    <div className="flex-1 overflow-hidden min-w-0">
-                                                        <p className="font-bold text-[10px] sm:text-xs truncate">{product.title}</p>
-                                                        <p className="text-[10px] sm:text-xs text-green-500 font-bold">${product.price}</p>
-                                                        <div className="flex gap-0.5 sm:gap-1 mt-1 flex-wrap">
-                                                            <button
-                                                                onClick={() => handleAddToCart(product)}
-                                                                className="text-[10px] sm:text-xs bg-blue-600 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-blue-700 transition flex items-center gap-0.5 sm:gap-1"
-                                                                title="Add to Cart"
-                                                            >
-                                                                <FaShoppingBag className="text-[8px] sm:text-[10px]" />
-                                                                <span className="hidden xs:inline">Cart</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleAddToFavorites(product)}
-                                                                className="text-[10px] sm:text-xs bg-pink-600 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-pink-700 transition flex items-center gap-0.5"
-                                                                title="Add to Favorites"
-                                                            >
-                                                                <FaHeart className="text-[8px] sm:text-[10px]" />
-                                                            </button>
-                                                            {product.productUrl && (
-                                                                <button
-                                                                    onClick={() => handleViewProduct(product)}
-                                                                    className="text-[10px] sm:text-xs bg-gray-600 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-gray-700 transition flex items-center gap-0.5"
-                                                                    title="View on Store"
-                                                                >
-                                                                    <FaExternalLinkAlt className="text-[8px] sm:text-[10px]" />
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
+            <div className="fixed bottom-4 sm:bottom-auto sm:top-1/2 sm:-translate-y-1/2 right-0 sm:right-6 left-0 sm:left-auto z-50 font-sans px-2 sm:px-0">
+                {/* Chat Window */}
+                {isOpen && (
+                    <div className={`mb-4 w-full sm:w-[380px] md:w-[400px] h-[70vh] sm:h-[400px] md:h-[420px] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp border ${bgClass} ${borderClass}`}>
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 sm:p-4 flex justify-between items-center text-white">
+                            <div className="flex items-center gap-2">
+                                <div className="bg-white/20 p-1.5 sm:p-2 rounded-full">
+                                    <FaRobot className="text-lg sm:text-xl" />
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-xs sm:text-sm">AI Stylist</h3>
+                                    <p className="text-[10px] sm:text-xs opacity-80">Always online</p>
                                 </div>
                             </div>
-                        ))}
+                            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded-full transition">
+                                <FaTimes className="text-lg sm:text-xl" />
+                            </button>
+                        </div>
 
-                        {isTyping && (
-                            <div className="flex justify-start">
-                                <div className={`${theme === 'dark' ? 'bg-slate-700' : 'bg-white'} p-2 sm:p-3 rounded-2xl rounded-bl-none shadow-sm border ${borderClass}`}>
-                                    <div className="flex gap-1">
-                                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                                        <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                        {/* Messages Area */}
+                        <div className={`flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 ${theme === 'dark' ? 'bg-slate-900/50' : 'bg-gray-50'}`}>
+                            {messages.map((msg, index) => (
+                                <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[90%] sm:max-w-[85%] rounded-2xl p-2 sm:p-3 text-xs sm:text-sm ${msg.sender === 'user'
+                                        ? 'bg-blue-600 text-white rounded-br-none'
+                                        : `${theme === 'dark' ? 'bg-slate-700 text-gray-100' : 'bg-white text-gray-800 border border-gray-200'} rounded-bl-none shadow-sm`
+                                        }`}>
+                                        <p className="whitespace-pre-line">{msg.text}</p>
+
+                                        {/* Product Recommendations */}
+                                        {msg.products && (
+                                            <div className="mt-2 sm:mt-3 space-y-1.5 sm:space-y-2">
+                                                {msg.products.map(product => (
+                                                    <div
+                                                        key={product.id}
+                                                        className={`flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-50'}`}
+                                                    >
+                                                        <img src={product.image} alt={product.title} className="w-10 h-10 sm:w-12 sm:h-12 object-contain bg-white rounded flex-shrink-0" />
+                                                        <div className="flex-1 overflow-hidden min-w-0">
+                                                            <p className="font-bold text-[10px] sm:text-xs truncate">{product.title}</p>
+                                                            <p className="text-[10px] sm:text-xs text-green-500 font-bold">${product.price}</p>
+                                                            <div className="flex gap-0.5 sm:gap-1 mt-1 flex-wrap">
+                                                                <button
+                                                                    onClick={() => handleAddToCart(product)}
+                                                                    className="text-[10px] sm:text-xs bg-blue-600 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-blue-700 transition flex items-center gap-0.5 sm:gap-1"
+                                                                    title="Add to Cart"
+                                                                >
+                                                                    <FaShoppingBag className="text-[8px] sm:text-[10px]" />
+                                                                    <span className="hidden xs:inline">Cart</span>
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleAddToFavorites(product)}
+                                                                    className="text-[10px] sm:text-xs bg-pink-600 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-pink-700 transition flex items-center gap-0.5"
+                                                                    title="Add to Favorites"
+                                                                >
+                                                                    <FaHeart className="text-[8px] sm:text-[10px]" />
+                                                                </button>
+                                                                {product.productUrl && (
+                                                                    <button
+                                                                        onClick={() => handleViewProduct(product)}
+                                                                        className="text-[10px] sm:text-xs bg-gray-600 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-gray-700 transition flex items-center gap-0.5"
+                                                                        title="View on Store"
+                                                                    >
+                                                                        <FaExternalLinkAlt className="text-[8px] sm:text-[10px]" />
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
+                                </div>
+                            ))}
+
+                            {isTyping && (
+                                <div className="flex justify-start">
+                                    <div className={`${theme === 'dark' ? 'bg-slate-700' : 'bg-white'} p-2 sm:p-3 rounded-2xl rounded-bl-none shadow-sm border ${borderClass}`}>
+                                        <div className="flex gap-1">
+                                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
+                                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Quick Replies */}
+                        {messages.length <= 2 && (
+                            <div className={`px-2 sm:px-3 py-1.5 sm:py-2 border-t ${borderClass} ${bgClass}`}>
+                                <p className={`text-[10px] sm:text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-1 sm:mb-2`}>Quick searches:</p>
+                                <div className="flex gap-1 sm:gap-2 flex-wrap">
+                                    {quickReplies.map((reply, idx) => (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleQuickReply(reply)}
+                                            className="text-[10px] sm:text-xs bg-blue-100 text-blue-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full hover:bg-blue-200 transition"
+                                        >
+                                            {reply}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         )}
-                        <div ref={messagesEndRef} />
-                    </div>
 
-                    {/* Quick Replies */}
-                    {messages.length <= 2 && (
-                        <div className={`px-2 sm:px-3 py-1.5 sm:py-2 border-t ${borderClass} ${bgClass}`}>
-                            <p className={`text-[10px] sm:text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-1 sm:mb-2`}>Quick searches:</p>
-                            <div className="flex gap-1 sm:gap-2 flex-wrap">
-                                {quickReplies.map((reply, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => handleQuickReply(reply)}
-                                        className="text-[10px] sm:text-xs bg-blue-100 text-blue-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full hover:bg-blue-200 transition"
-                                    >
-                                        {reply}
-                                    </button>
-                                ))}
+                        {/* Input Area */}
+                        <form onSubmit={handleSend} className={`p-2 sm:p-3 border-t ${borderClass} ${bgClass}`}>
+                            <div className="flex gap-1.5 sm:gap-2">
+                                <input
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    placeholder="Ask me anything..."
+                                    className={`flex-1 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${inputBgClass}`}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={!input.trim()}
+                                    className="bg-blue-600 text-white p-1.5 sm:p-2 rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                >
+                                    <FaPaperPlane className="text-xs sm:text-sm" />
+                                </button>
                             </div>
-                        </div>
-                    )}
-
-                    {/* Input Area */}
-                    <form onSubmit={handleSend} className={`p-2 sm:p-3 border-t ${borderClass} ${bgClass}`}>
-                        <div className="flex gap-1.5 sm:gap-2">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="Ask me anything..."
-                                className={`flex-1 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${inputBgClass}`}
-                            />
-                            <button
-                                type="submit"
-                                disabled={!input.trim()}
-                                className="bg-blue-600 text-white p-1.5 sm:p-2 rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                            >
-                                <FaPaperPlane className="text-xs sm:text-sm" />
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            )}
-
-            {/* Floating Button */}
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="group relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:scale-110 transition-transform duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300 ml-auto mr-2 sm:mr-0"
-            >
-                {isOpen ? <FaTimes className="text-lg sm:text-xl" /> : <FaRobot className="text-xl sm:text-2xl animate-pulse" />}
-
-                {/* Tooltip */}
-                {!isOpen && (
-                    <span className="hidden sm:block absolute right-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                        Ask AI Stylist
-                    </span>
+                        </form>
+                    </div>
                 )}
-            </button>
-        </div>
+
+                {/* Floating Button */}
+                <button
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="group relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:scale-110 transition-transform duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300 ml-auto mr-2 sm:mr-0"
+                >
+                    {isOpen ? <FaTimes className="text-lg sm:text-xl" /> : <FaRobot className="text-xl sm:text-2xl animate-pulse" />}
+
+                    {/* Tooltip */}
+                    {!isOpen && (
+                        <span className="hidden sm:block absolute right-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            Ask AI Stylist
+                        </span>
+                    )}
+                </button>
+            </div>
+        </>
     );
 };
 
