@@ -22,12 +22,17 @@ exports.contactUs = async (req, res) => {
             });
         }
 
-        // Create transporter
+        // Create transporter with explicit host/port (more reliable on cloud platforms)
         const transporter = nodemailer.createTransport({
-            service: 'gmail',
+            host: 'smtp.gmail.com',
+            port: 465,
+            secure: true, // use SSL
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
+            },
+            tls: {
+                rejectUnauthorized: false
             }
         });
 
