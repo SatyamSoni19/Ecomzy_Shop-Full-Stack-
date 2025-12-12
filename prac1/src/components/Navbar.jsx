@@ -403,7 +403,7 @@ const Navbar = ({ setIsAuthenticated }) => {
             <div className={`mt-6 pt-4 border-t ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'}`}>
               <p className="text-sm opacity-75 mb-2">Created by</p>
               <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                SATYAM SONI
+                ADARSH DIBEY & ABHISHEK HARDIYA
               </p>
             </div>
           </div>
