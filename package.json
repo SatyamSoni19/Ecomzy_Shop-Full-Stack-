@@ -1,6 +1,8 @@
 {
   "dependencies": {
     "cookie-parser": "^1.4.7",
+    "express-fileupload": "^1.5.2",
+    "nodemailer": "^7.0.12",
     "react-toastify": "^11.0.5"
   }
 }

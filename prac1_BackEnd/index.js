@@ -7,9 +7,11 @@ require("dotenv").config();
 const PORT = process.env.PORT || 3000;
 
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const fileUpload = require("express-fileupload");
+
 app.use(cookieParser());
 
-const cors = require("cors");
 app.use(cors({
   origin: [
     "https://ecomzy-shop-full-stack.vercel.app",
@@ -21,14 +23,22 @@ app.use(cors({
 // Middlewares
 app.use(express.json());
 
-// Import Routes
-const user = require("./routes/user");
-// Mounting
-app.use("/api/v1", user);
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: '/tmp/'
+}));
 
 // Connect to DataBase
 const dbconnect = require("./config/database");
 dbconnect();
+
+const cloudinary = require("./config/cloudinary");
+cloudinary.cloudinaryConnect();
+
+// Import Routes
+const user = require("./routes/user");
+// Mounting
+app.use("/api/v1", user);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

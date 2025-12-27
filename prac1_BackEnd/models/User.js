@@ -1,9 +1,6 @@
 // Import Mongoose
 const mongoose = require("mongoose");
 
-// ENV variables
-require("dotenv").config();
-
 // Schema
 const userSchema = new mongoose.Schema({
 
@@ -22,6 +19,12 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
+    },
+
+    image: {
+        type: String,
+        required: true,
+        default: "https://api.dicebear.com/5.x/initials/svg?seed=User"  // Default Profile Photo for User
     }
 
 })

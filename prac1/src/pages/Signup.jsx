@@ -13,6 +13,10 @@ const Signup = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const BASE_URL = window.location.hostname === "localhost"
+    ? "http://localhost:4000"
+    : "https://ecomzy-shop-full-stack.onrender.com";
+
   const submitHandler = async (e) => {
     e.preventDefault();
 
@@ -24,7 +28,7 @@ const Signup = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("https://ecomzy-shop-full-stack.onrender.com/api/v1/signup", {
+      const response = await fetch(`${BASE_URL}/api/v1/signup`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

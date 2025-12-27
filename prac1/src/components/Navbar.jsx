@@ -8,6 +8,10 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
 
+const BASE_URL = window.location.hostname === "localhost"
+  ? "http://localhost:4000"
+  : "https://ecomzy-shop-full-stack.onrender.com";
+
 const Navbar = ({ setIsAuthenticated }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
@@ -25,7 +29,7 @@ const Navbar = ({ setIsAuthenticated }) => {
   // Logout Handler
   const handleLogout = async () => {
     try {
-      await fetch("https://ecomzy-shop-full-stack.onrender.com/api/v1/logout", {
+      await fetch(`${BASE_URL}/api/v1/logout`, {
         method: "POST",
         credentials: "include"
       });
@@ -58,7 +62,7 @@ const Navbar = ({ setIsAuthenticated }) => {
     setContactLoading(true);
 
     try {
-      const response = await fetch('https://ecomzy-shop-full-stack.onrender.com/api/v1/contact', {
+      const response = await fetch(`${BASE_URL}/api/v1/contact`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -80,6 +84,44 @@ const Navbar = ({ setIsAuthenticated }) => {
       toast.error('Failed to send message. Please try again later.');
     } finally {
       setContactLoading(false);
+    }
+  };
+
+  // Image Upload Handlers
+  const fileInputRef = useRef(null);
+
+  const handleImageClick = () => {
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("profileImage", file);
+
+      try {
+        const token = localStorage.getItem("token");
+
+        const response = await fetch(`${BASE_URL}/api/v1/upload-image`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          },
+          credentials: "include",
+          body: formData,
+        });
+        const data = await response.json();
+        if (data.success) {
+          setUser(data.data);
+          toast.success("Profile updated!");
+        } else {
+          toast.error(data.message || "Upload failed");
+        }
+      } catch (error) {
+        console.error("Error uploading image", error);
+        toast.error("Error uploading image");
+      }
     }
   };
 
@@ -237,17 +279,40 @@ const Navbar = ({ setIsAuthenticated }) => {
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className={`p-3 rounded-lg transition-all duration-200 ${hoverClass}`}
+              className={`p-3 rounded-lg transition-all duration-200${hoverClass}`}
             >
-              <FaUser className='text-xl' />
+              <FaUser className='text-xl cursor-pointer' />
             </button>
 
             {showUserMenu && (
               <div className={`absolute top-14 right-0 shadow-2xl rounded-xl w-64 p-4 border animate-slideDown z-50 ${dropdownBgClass}`}>
-                {/* Welcome Message */}
-                <div className={`mb-4 pb-3 border-b ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'}`}>
-                  <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Welcome</p>
-                  <p className={`text-lg font-bold ${textClass}`}>{user?.name || user?.email || 'User'}</p>
+                {/* Welcome Message & Profile Image */}
+                <div className={`flex items-center justify-between mb-4 pb-3 border-b ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'}`}>
+                  <div>
+                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Welcome</p>
+                    <p className={`text-lg font-bold ${textClass}`}>{user?.name || user?.email || 'User'}</p>
+                  </div>
+
+                  {/* Profile Upload */}
+                  <div className="relative group">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileChange}
+                      className="hidden"
+                      accept="image/*"
+                    />
+                    <div
+                      onClick={handleImageClick}
+                      className={`w-12 h-12 rounded-full overflow-hidden cursor-pointer border-2 transition-transform hover:scale-105 ${theme === 'dark' ? 'border-slate-500' : 'border-gray-200'}`}
+                    >
+                      <img
+                        src={user?.image || `https://api.dicebear.com/5.x/initials/svg?seed=${user?.name || 'User'}`}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Menu Items */}
@@ -258,7 +323,7 @@ const Navbar = ({ setIsAuthenticated }) => {
                       setShowAboutModal(true);
                       setShowUserMenu(false);
                     }}
-                    className={`w-full text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
+                    className={`w-full cursor-pointer text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
                   >
                     About
                   </button>
@@ -269,7 +334,7 @@ const Navbar = ({ setIsAuthenticated }) => {
                       setShowContactModal(true);
                       setShowUserMenu(false);
                     }}
-                    className={`w-full text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
+                    className={`w-full cursor-pointer text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
                   >
                     Contact Us
                   </button>
@@ -277,7 +342,7 @@ const Navbar = ({ setIsAuthenticated }) => {
                   {/* Theme Toggle Button */}
                   <button
                     onClick={toggleTheme}
-                    className={`w-full flex items-center justify-between px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
+                    className={`w-full cursor-pointer flex items-center justify-between px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
                   >
                     <span>Theme</span>
                     {theme === 'dark' ? <FaMoon className="text-sm" /> : <FaSun className="text-sm text-yellow-500" />}
@@ -286,7 +351,7 @@ const Navbar = ({ setIsAuthenticated }) => {
                   {/* Logout Button */}
                   <button
                     onClick={handleLogout}
-                    className="w-full text-left px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-all duration-200 font-semibold text-white mt-2"
+                    className="w-full cursor-pointer text-left px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-all duration-200 font-semibold text-white mt-2"
                   >
                     Logout
                   </button>

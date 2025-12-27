@@ -9,8 +9,12 @@ exports.auth = async (req, res, next) => {
 
     try {
 
-        // Extract Token from req
-        const token = req.body.token || req.header("Authorization").replace("Bearer ", "");
+        // Extract Token from req (Cookies, Body, or Header)
+        const token =
+            req?.cookies?.token ||
+            req?.body?.token ||
+            (req.header("Authorization") &&
+                req.header("Authorization").replace("Bearer ", ""));
 
         // If Token is empty
         if (!token) {
@@ -37,9 +41,11 @@ exports.auth = async (req, res, next) => {
 
     }
     catch (error) {
+        console.error("Auth Middleware Error:", error); // Debug Logging
         return res.status(401).json({
             success: false,
-            message: 'Something went Wrong, while verifying token'
+            message: 'Something went Wrong, while verifying token',
+            error: error.message // Send error to frontend for visibility,
         })
     }
 

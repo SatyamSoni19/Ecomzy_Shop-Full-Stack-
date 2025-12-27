@@ -1,4 +1,5 @@
-const nodemailer = require('nodemailer');
+const emailService = require("../services/emailService");
+const emailTemplates = require("../templates/emails/emailTemplates");
 
 // Contact Form Handler
 exports.contactUs = async (req, res) => {
@@ -22,60 +23,28 @@ exports.contactUs = async (req, res) => {
             });
         }
 
-        // Create transporter with explicit host/port (more reliable on cloud platforms)
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.gmail.com',
-            port: 465,
-            secure: true, // use SSL
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS
-            },
-            tls: {
-                rejectUnauthorized: false
-            }
-        });
+        // --- EMAIL NOTIFICATION ---
+        try {
+            const adminTmpl = emailTemplates.contactUsEmail(name, email, message);
+            await emailService.sendEmail(process.env.ADMIN_EMAIL || process.env.EMAIL_USER, adminTmpl.subject, adminTmpl.html);
+        } catch (emailErr) {
+            console.error("Contact notification email error:", emailErr);
+            // We don't fail the request if just the email notification fails
+        }
 
-        // Email options
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: process.env.CONTACT_TO_EMAIL || process.env.EMAIL_USER,
-            subject: `New Contact Form Submission from ${name}`,
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                    <h2 style="color: #4F46E5; border-bottom: 2px solid #4F46E5; padding-bottom: 10px;">New Contact Form Submission</h2>
-                    
-                    <div style="margin: 20px 0;">
-                        <p style="margin: 10px 0;"><strong>Name:</strong> ${name}</p>
-                        <p style="margin: 10px 0;"><strong>Email:</strong> ${email}</p>
-                        <p style="margin: 10px 0;"><strong>Message:</strong></p>
-                        <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin-top: 10px;">
-                            ${message.replace(/\n/g, '<br>')}
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px;">
-                        <p>This is an automated message from your Ecomzy Shop contact form.</p>
-                        <p>Reply directly to this email to respond to ${name} at ${email}</p>
-                    </div>
-                </div>
-            `,
-            replyTo: email
-        };
-
-        // Send email
-        await transporter.sendMail(mailOptions);
+        // Log the message (optional, but good for visibility if email is removed)
+        console.log(`Received contact form submission from ${name} (${email}): ${message}`);
 
         res.status(200).json({
             success: true,
-            message: "Message sent successfully! We'll get back to you soon."
+            message: "Thank you for your feedback! We have received your message."
         });
 
     } catch (error) {
         console.error("Contact form error:", error);
         res.status(500).json({
             success: false,
-            message: "Failed to send message. Please try again later."
+            message: "Failed to process message. Please try again later."
         });
     }
 };
