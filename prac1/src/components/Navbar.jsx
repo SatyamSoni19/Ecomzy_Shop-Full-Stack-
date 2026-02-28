@@ -34,7 +34,7 @@ const Navbar = ({ setIsAuthenticated }) => {
         credentials: "include"
       });
 
-      localStorage.removeItem("token");
+      // No need to remove "token" from localStorage anymore!
       localStorage.removeItem("user");
       setUser(null);
       setIsAuthenticated(false);
@@ -101,13 +101,11 @@ const Navbar = ({ setIsAuthenticated }) => {
       formData.append("profileImage", file);
 
       try {
-        const token = localStorage.getItem("token");
-
+        // You do not need to read token from localStorage anymore
         const response = await fetch(`${BASE_URL}/api/v1/upload-image`, {
           method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`
-          },
+          // The Authorization header is NO LONGER needed because "credentials: 'include'"
+          // will attach the httpOnly cookie automatically to your request!
           credentials: "include",
           body: formData,
         });
@@ -468,7 +466,7 @@ const Navbar = ({ setIsAuthenticated }) => {
             <div className={`mt-6 pt-4 border-t ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'}`}>
               <p className="text-sm opacity-75 mb-2">Created by</p>
               <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                ADARSH DIBEY & ABHISHEK HARDIYA
+                SATYAM SONI
               </p>
             </div>
           </div>

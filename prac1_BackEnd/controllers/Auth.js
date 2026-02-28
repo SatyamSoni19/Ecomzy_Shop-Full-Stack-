@@ -90,7 +90,6 @@ exports.signup = async (req, res) => {
 
 }
 
-
 // Login Handler
 exports.login = async (req, res) => {
 
@@ -137,7 +136,7 @@ exports.login = async (req, res) => {
             })
 
             user = user.toObject();
-            user.token = token;
+            // REMOVED: user.token = token; // This is crucial because `localStorage.setItem("user", data.user)` still exists, so adding it to `user` would secretly put the token back in localStorage!
             user.password = undefined;
 
             const options = {
@@ -147,7 +146,7 @@ exports.login = async (req, res) => {
 
             return res.cookie("token", token, options).status(200).json({
                 success: true,
-                token,
+                // token,
                 user,
                 message: 'Logged in Successfully'
             });

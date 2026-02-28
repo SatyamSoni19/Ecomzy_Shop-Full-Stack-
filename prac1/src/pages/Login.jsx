@@ -43,7 +43,7 @@ const Login = ({ setIsAuthenticated }) => {
 
       if (data.success) {
         toast.success("Welcome back! 🚀");
-        localStorage.setItem("token", data.token);
+        //localStorage.setItem("token", data.token);
         if (data.user) {
           setUser(data.user);
           localStorage.setItem("user", JSON.stringify(data.user));
