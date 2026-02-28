@@ -18,16 +18,41 @@ function App() {
   const [loading, setLoading] = useState(true);
   const { theme, setUser } = useContext(AppContext);
 
-  // Check for existing token on mount (Persistent Login)
+  // Check for existing session on mount (Persistent Login)
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user");
+    const checkAuthStatus = async () => {
+      try {
+        const BASE_URL = window.location.hostname === "localhost"
+          ? "http://localhost:4000"
+          : "https://ecomzy-shop-full-stack.onrender.com";
 
-    if (token && user) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(user));
-    }
-    setLoading(false);
+        const response = await fetch(`${BASE_URL}/api/v1/profile`, {
+          method: "GET",
+          credentials: "include" // This sends the httpOnly cookie!
+        });
+
+        const data = await response.json();
+
+        if (data.success && data.user) {
+          setIsAuthenticated(true);
+          setUser(data.user);
+          // We can optionally keep standard user info in localStorage for quick UI renders,
+          // but true authentication now relies on this API response.
+        } else {
+          setIsAuthenticated(false);
+          setUser(null);
+          // Clean up any stale UI data
+          localStorage.removeItem("user");
+        }
+      } catch (error) {
+        console.error("Auth check failed on refresh", error);
+        setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuthStatus();
   }, [setUser]);
 
   // Show loading spinner while checking authentication
