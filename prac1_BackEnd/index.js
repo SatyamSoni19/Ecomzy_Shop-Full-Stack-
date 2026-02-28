@@ -23,10 +23,7 @@ app.use(cors({
 // Middlewares
 app.use(express.json());
 
-app.use(fileUpload({
-  useTempFiles: true,
-  tempFileDir: '/tmp/'
-}));
+app.use(fileUpload());
 
 // Connect to DataBase
 const dbconnect = require("./config/database");

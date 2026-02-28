@@ -8,9 +8,8 @@ function isFileTypeSupported(fileType, supportedType) {
 
 }
 
-// Function to Upload
+// Function to Upload via Stream (Buffer)
 async function uploadFileToCloudinary(file, folder, quality) {
-
     const options = {
         folder: folder,
         use_filename: true,
@@ -23,8 +22,17 @@ async function uploadFileToCloudinary(file, folder, quality) {
 
     options.resource_type = "auto"
 
-    return await cloudinary.uploader.upload(file.tempFilePath, options)
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            options,
+            (error, result) => {
+                if (error) return reject(error);
+                resolve(result);
+            }
+        );
 
+        uploadStream.end(file.data);
+    });
 }
 
 
