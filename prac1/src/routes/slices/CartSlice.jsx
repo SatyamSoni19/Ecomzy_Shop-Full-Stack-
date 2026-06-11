@@ -1,40 +1,102 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// Load cart from localStorage
-const loadCartFromLocalStorage = () => {
-    try {
-        const savedCart = localStorage.getItem('cart');
-        return savedCart ? JSON.parse(savedCart) : [];
-    } catch (error) {
-        console.error('Error loading cart from localStorage:', error);
-        return [];
-    }
-};
+const BASE_URL = window.location.hostname === "localhost"
+    ? "http://localhost:4000"
+    : "https://ecomzy-shop-full-stack.onrender.com";
 
-// Save cart to localStorage
-const saveCartToLocalStorage = (cart) => {
+// ========== Async Thunks ==========
+
+// Fetch cart from MongoDB
+export const fetchCart = createAsyncThunk("cart/fetchCart", async (_, { rejectWithValue }) => {
     try {
-        localStorage.setItem('cart', JSON.stringify(cart));
+        const res = await fetch(`${BASE_URL}/api/v1/cart`, {
+            method: "GET",
+            credentials: "include",
+        });
+        const data = await res.json();
+        if (data.success) return data.cart;
+        return rejectWithValue(data.message);
     } catch (error) {
-        console.error('Error saving cart to localStorage:', error);
+        return rejectWithValue(error.message);
     }
-};
+});
+
+// Add product to cart in MongoDB
+export const addToCartAPI = createAsyncThunk("cart/addToCartAPI", async ({ productId, quantity = 1 }, { rejectWithValue }) => {
+    try {
+        const res = await fetch(`${BASE_URL}/api/v1/cart/add`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ productId, quantity }),
+        });
+        const data = await res.json();
+        if (data.success) return data.cart;
+        return rejectWithValue(data.message);
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
+});
+
+// Remove product from cart in MongoDB
+export const removeFromCartAPI = createAsyncThunk("cart/removeFromCartAPI", async (productId, { rejectWithValue }) => {
+    try {
+        const res = await fetch(`${BASE_URL}/api/v1/cart/remove`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ productId }),
+        });
+        const data = await res.json();
+        if (data.success) return data.cart;
+        return rejectWithValue(data.message);
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
+});
+
+// Clear entire cart in MongoDB (used on checkout)
+export const clearCartAPI = createAsyncThunk("cart/clearCartAPI", async (_, { rejectWithValue }) => {
+    try {
+        const res = await fetch(`${BASE_URL}/api/v1/cart/clear`, {
+            method: "POST",
+            credentials: "include",
+        });
+        const data = await res.json();
+        if (data.success) return data.cart;
+        return rejectWithValue(data.message);
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
+});
+
+// ========== Slice ==========
 
 export const CartSlice = createSlice({
     name: "cart",
-    initialState: loadCartFromLocalStorage(), // Load from localStorage on init
+    initialState: [], // Starts empty, hydrated from API after login
     reducers: {
-        add: (state, action) => {
-            state.push(action.payload);
-            saveCartToLocalStorage(state); // Save after adding
+        // Clear cart locally (used on logout without API call)
+        clearCartLocal: () => {
+            return [];
         },
-        remove: (state, action) => {
-            const newState = state.filter((item) => item.id != action.payload.id);
-            saveCartToLocalStorage(newState); // Save after removing
-            return newState;
-        }
-    }
-})
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchCart.fulfilled, (state, action) => {
+                return action.payload; // Replace state with fetched cart IDs
+            })
+            .addCase(addToCartAPI.fulfilled, (state, action) => {
+                return action.payload; // Replace state with updated cart IDs from server
+            })
+            .addCase(removeFromCartAPI.fulfilled, (state, action) => {
+                return action.payload;
+            })
+            .addCase(clearCartAPI.fulfilled, (state, action) => {
+                return action.payload; // Should be []
+            });
+    },
+});
 
-export const { add, remove } = CartSlice.actions;
+export const { clearCartLocal } = CartSlice.actions;
 export default CartSlice.reducer;

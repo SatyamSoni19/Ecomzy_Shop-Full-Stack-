@@ -1,9 +1,38 @@
-# Node modules
-prac1/node_modules/
-prac1_BackEnd/node_modules/
+# Dependencies
+node_modules/
+**/node_modules/
 
-# Environment files
-prac1_BackEnd/.env
+# Environment variables
+.env
+*.env
 
-# Build files
-prac1/dist/
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# Coverage
+coverage/
+
+# Vercel
+.vercel/
+
+# Misc
+*.tmp
+*.cache

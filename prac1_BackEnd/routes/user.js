@@ -7,6 +7,8 @@ const { login, signup, logout } = require("../controllers/Auth");
 const { contactUs } = require("../controllers/contactController");
 const { auth } = require("../middlewares/auth");
 const { uploadProfileImage } = require('../controllers/fileUpload');
+const { getCart, addToCart, removeFromCart, clearCart, getFavourites, addToFavourites, removeFromFavourites } = require('../controllers/cartLikeController');
+const { submitRating, getProductRatings, getUserRating } = require('../controllers/ratingController');
 
 // Define Routes
 router.post("/login", login)
@@ -14,6 +16,22 @@ router.post("/signup", signup)
 router.post("/logout", logout)
 router.post("/contact", contactUs)
 router.post("/upload-image", auth, uploadProfileImage)
+
+// Cart Routes (protected)
+router.get("/cart", auth, getCart)
+router.post("/cart/add", auth, addToCart)
+router.post("/cart/remove", auth, removeFromCart)
+router.post("/cart/clear", auth, clearCart)
+
+// Favourites Routes (protected)
+router.get("/favourites", auth, getFavourites)
+router.post("/favourites/add", auth, addToFavourites)
+router.post("/favourites/remove", auth, removeFromFavourites)
+
+// Rating Routes
+router.post("/rating", auth, submitRating)
+router.get("/rating/:productId", getProductRatings)       // Public — no auth needed
+router.get("/rating/:productId/me", auth, getUserRating)   // Protected — user's own rating
 
 const User = require("../models/User");
 

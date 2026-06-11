@@ -210,6 +210,7 @@ export const products = [
     price: 69.50,
     description: "The original blue jean since 1873, with a straight leg and button fly.",
     category: "men's clothing",
+    sizes: ["S", "M", "L", "XL", "XXL"],
     image: "https://images.unsplash.com/photo-1542272604-787c3835535d?w=500",
     productUrl: "https://www.levi.com/US/en_US/clothing/men/jeans/501-original-fit-mens-jeans/p/005010000",
     rating: { rate: 4.7, count: 9800 }

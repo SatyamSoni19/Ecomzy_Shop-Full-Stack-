@@ -34,8 +34,13 @@ cloudinary.cloudinaryConnect();
 
 // Import Routes
 const user = require("./routes/user");
+const adminRoutes = require("./routes/adminRoutes");
+const analyticsRoutes = require("./routes/analyticsRoutes");
+
 // Mounting
 app.use("/api/v1", user);
+app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/analytics", analyticsRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

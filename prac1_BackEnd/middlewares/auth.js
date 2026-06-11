@@ -48,5 +48,22 @@ exports.auth = async (req, res, next) => {
             error: error.message // Send error to frontend for visibility,
         })
     }
+}
 
+// Middleware for Admin
+exports.isAdmin = async (req, res, next) => {
+    try {
+        if (req.user.role !== "admin") {
+            return res.status(403).json({
+                success: false,
+                message: "This is a protected route for admin"
+            });
+        }
+        next();
+    } catch (error) {
+        return res.status(500).json({
+            success: false,
+            message: "User role cannot be verified"
+        });
+    }
 }

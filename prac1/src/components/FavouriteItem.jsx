@@ -1,7 +1,7 @@
 import React from 'react'
 import { FcDeleteDatabase } from "react-icons/fc";
 import { useDispatch } from 'react-redux';
-import { removeDislike } from '../routes/slices/LikeSlice';
+import { removeFromFavAPI } from '../routes/slices/LikeSlice';
 import ItemCard from './ItemCard';
 import { toast } from 'react-toastify';
 
@@ -13,7 +13,7 @@ const FavouriteItem = ({ item }) => {
     <ItemCard
       item={item}
       onRemove={() => {
-        dispatch(removeDislike({id: item.id}))
+        dispatch(removeFromFavAPI(item.id))
         toast.warn("Item disliked!");
       }} 
       buttonText="UnLike" />

@@ -5,24 +5,30 @@ import { IoClose } from "react-icons/io5";
 import { IoIosMenu } from "react-icons/io";
 import { MdCheck } from "react-icons/md";
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { AppContext } from '../context/AppContext';
 import { toast } from 'react-toastify';
+import { FiLogIn, FiUserPlus } from 'react-icons/fi';
+import { clearCartLocal } from '../routes/slices/CartSlice';
+import { clearFavouritesLocal } from '../routes/slices/LikeSlice';
+import FilterSidebar from './FilterSidebar';
 
 const BASE_URL = window.location.hostname === "localhost"
   ? "http://localhost:4000"
   : "https://ecomzy-shop-full-stack.onrender.com";
 
-const Navbar = ({ setIsAuthenticated }) => {
+const Navbar = ({ setIsAuthenticated, isAuthenticated }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showAboutModal, setShowAboutModal] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
   const [contactFormData, setContactFormData] = useState({ name: '', email: '', message: '' });
   const [contactLoading, setContactLoading] = useState(false);
-  const filterRef = useRef(null);
   const userMenuRef = useRef(null);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const { selectedCategories, setSelectedCategories, user, setUser, theme, toggleTheme } = useContext(AppContext);
 
@@ -34,8 +40,13 @@ const Navbar = ({ setIsAuthenticated }) => {
         credentials: "include"
       });
 
-      // No need to remove "token" from localStorage anymore!
+      // Clear Redux cart & favourites state immediately
+      dispatch(clearCartLocal());
+      dispatch(clearFavouritesLocal());
+
       localStorage.removeItem("user");
+      localStorage.removeItem("cart");
+      localStorage.removeItem("favorites");
       setUser(null);
       setIsAuthenticated(false);
 
@@ -143,36 +154,33 @@ const Navbar = ({ setIsAuthenticated }) => {
     }
   };
 
-  // ✅ Click outside to close filter and user menu
+  // ✅ Click outside to close user menu
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (filterRef.current && !filterRef.current.contains(event.target)) {
-        setShowFilter(false);
-      }
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setShowUserMenu(false);
       }
     };
 
-    if (showFilter || showUserMenu) {
+    if (showUserMenu) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showFilter, showUserMenu]);
+  }, [showUserMenu]);
 
-  // Theme-based styles
-  const textClass = theme === 'dark' ? 'text-gray-100' : 'text-gray-800';
-  const bgClass = theme === 'dark' ? 'bg-slate-900' : 'bg-white';
-  const dropdownBgClass = theme === 'dark' ? 'bg-slate-800 border-slate-700' : 'bg-gradient-to-br from-blue-50 to-purple-50 border-gray-200';
-  const hoverClass = theme === 'dark' ? 'hover:bg-slate-700' : 'hover:bg-blue-100';
-  const modalBgClass = theme === 'dark' ? 'bg-slate-800 text-gray-100' : 'bg-gradient-to-br from-white to-gray-100 text-gray-800';
-  const inputBgClass = theme === 'dark' ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-900';
+  // Premium dark luxury theme styles
+  const textClass = 'text-[#FFFFFF]';
+  const bgClass = 'bg-[#0A0A0A]';
+  const dropdownBgClass = 'bg-[#111111] border border-[#262626]';
+  const hoverClass = 'hover:bg-[#151515] transition-all duration-200';
+  const modalBgClass = 'bg-[#111111] text-[#FFFFFF] border border-[#262626]';
+  const inputBgClass = 'bg-[#151515] border-[#262626] text-[#FFFFFF] focus:border-[#10B981] focus:ring-1 focus:ring-[#10B981]/30';
 
   return (
-    <div className={`relative transition-colors duration-300 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+    <div className="relative text-[#FFFFFF]">
       <nav className="flex justify-between items-center h-20 max-w-6xl mx-auto">
         <div className='ml-5'>
           <img src='../logo.png' className='h-8 md:h-14' />
@@ -186,12 +194,24 @@ const Navbar = ({ setIsAuthenticated }) => {
           <NavLink to='/MostWanted' className="nav-link-animated">
             <p>MostWanted</p>
           </NavLink>
-          <NavLink to='/Trending' className="nav-link-animated">
-            <p>Trending</p>
-          </NavLink>
-          <NavLink to='/Favourites' className="nav-link-animated">
-            <p>Favourites</p>
-          </NavLink>
+          {isAuthenticated ? (
+            <NavLink to='/Trending' className="nav-link-animated">
+              <p>Trending</p>
+            </NavLink>
+          ) : (
+            <button onClick={() => setShowAuthPopup(true)} className="nav-link-animated cursor-pointer bg-transparent border-none text-inherit">
+              <p>Trending</p>
+            </button>
+          )}
+          {isAuthenticated ? (
+            <NavLink to='/Favourites' className="nav-link-animated">
+              <p>Favourites</p>
+            </NavLink>
+          ) : (
+            <button onClick={() => setShowAuthPopup(true)} className="nav-link-animated cursor-pointer bg-transparent border-none text-inherit">
+              <p>Favourites</p>
+            </button>
+          )}
         </div>
 
         {/* Icons */}
@@ -200,77 +220,31 @@ const Navbar = ({ setIsAuthenticated }) => {
           {/* Desktop Actions (Filter & Cart) */}
           <div className='hidden md:flex items-center gap-4'>
             {/* Filter Button */}
-            <div className="relative" ref={filterRef}>
-              <button
-                onClick={() => setShowFilter(!showFilter)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${showFilter
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : hoverClass
-                  }`}
-              >
-                <FaFilter className="text-lg" />
-                {selectedCategories.length > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                    {selectedCategories.length}
-                  </span>
-                )}
-              </button>
-
-              {showFilter && (
-                <div className={`absolute top-14 right-0 shadow-2xl rounded-xl w-64 p-4 border animate-slideDown z-50 ${dropdownBgClass}`}>
-                  <div className={`flex items-center justify-between mb-3 pb-2 border-b ${theme === 'dark' ? 'border-slate-600' : 'border-gray-200'}`}>
-                    <h3 className={`font-bold text-lg ${textClass}`}>Filter by Category</h3>
-                    {selectedCategories.length > 0 && (
-                      <button
-                        onClick={() => setSelectedCategories([])}
-                        className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
-                      >
-                        Clear All
-                      </button>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    {categories.map((cat) => {
-                      const isSelected = selectedCategories.includes(cat);
-                      return (
-                        <label
-                          key={cat}
-                          className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition-all duration-200 ${isSelected
-                            ? 'bg-blue-100 border-2 border-blue-400'
-                            : `${hoverClass} border-2 border-transparent`
-                            }`}
-                        >
-                          <div className="relative">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => handleCategoryChange(cat)}
-                              className="sr-only"
-                            />
-                            <div
-                              className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200 ${isSelected
-                                ? 'bg-blue-600 border-blue-600'
-                                : `${theme === 'dark' ? 'bg-slate-700 border-slate-500' : 'bg-white border-gray-300'}`
-                                }`}
-                            >
-                              {isSelected && <MdCheck className="text-white text-sm" />}
-                            </div>
-                          </div>
-                          <span className={`capitalize font-medium ${isSelected ? 'text-blue-700' : textClass}`}>
-                            {cat}
-                          </span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
+            <button
+              onClick={() => setShowFilter(true)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 ${showFilter
+                ? 'bg-[#F59E0B] text-[#0A0A0A] shadow-[0_0_15px_rgba(245,158,11,0.3)] font-semibold'
+                : hoverClass
+                }`}
+            >
+              <FaFilter className="text-lg" />
+              {selectedCategories.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {selectedCategories.length}
+                </span>
               )}
-            </div>
+            </button>
 
             {/* Cart */}
-            <NavLink to='/Cart' className={`p-3 rounded-lg transition-all duration-200 ${hoverClass}`}>
-              <FaShoppingCart className='text-xl' />
-            </NavLink>
+            {isAuthenticated ? (
+              <NavLink to='/Cart' className={`p-3 rounded-lg transition-all duration-200 ${hoverClass}`}>
+                <FaShoppingCart className='text-xl' />
+              </NavLink>
+            ) : (
+              <button onClick={() => setShowAuthPopup(true)} className={`p-3 rounded-lg transition-all duration-200 cursor-pointer bg-transparent border-none text-inherit ${hoverClass}`}>
+                <FaShoppingCart className='text-xl' />
+              </button>
+            )}
           </div>
 
           {/* User Profile Dropdown (Visible on Mobile) */}
@@ -284,76 +258,125 @@ const Navbar = ({ setIsAuthenticated }) => {
 
             {showUserMenu && (
               <div className={`absolute top-14 right-0 shadow-2xl rounded-xl w-64 p-4 border animate-slideDown z-50 ${dropdownBgClass}`}>
-                {/* Welcome Message & Profile Image */}
-                <div className={`flex items-center justify-between mb-4 pb-3 border-b ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'}`}>
-                  <div>
-                    <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>Welcome</p>
-                    <p className={`text-lg font-bold ${textClass}`}>{user?.name || user?.email || 'User'}</p>
-                  </div>
 
-                  {/* Profile Upload */}
-                  <div className="relative group">
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={handleFileChange}
-                      className="hidden"
-                      accept="image/*"
-                    />
-                    <div
-                      onClick={handleImageClick}
-                      className={`w-12 h-12 rounded-full overflow-hidden cursor-pointer border-2 transition-transform hover:scale-105 ${theme === 'dark' ? 'border-slate-500' : 'border-gray-200'}`}
-                    >
-                      <img
-                        src={user?.image || `https://api.dicebear.com/5.x/initials/svg?seed=${user?.name || 'User'}`}
-                        alt="Profile"
-                        className="w-full h-full object-cover"
-                      />
+                {isAuthenticated ? (
+                  /* ===== AUTHENTICATED USER MODAL ===== */
+                  <>
+                    {/* Welcome Message & Profile Image */}
+                    <div className="flex items-center justify-between mb-4 pb-3 border-b border-[#262626]">
+                      <div>
+                        <p className="text-sm text-[#71717A]">Welcome</p>
+                        <p className={`text-lg font-bold ${textClass}`}>{user?.name || user?.email || 'User'}</p>
+                      </div>
+
+                      {/* Profile Upload */}
+                      <div className="relative group">
+                        <input
+                          type="file"
+                          ref={fileInputRef}
+                          onChange={handleFileChange}
+                          className="hidden"
+                          accept="image/*"
+                        />
+                        <div
+                          onClick={handleImageClick}
+                          className="w-12 h-12 rounded-full overflow-hidden cursor-pointer border-2 border-[#262626] transition-transform hover:scale-105"
+                        >
+                          <img
+                            src={user?.image || `https://api.dicebear.com/5.x/initials/svg?seed=${user?.name || 'User'}`}
+                            alt="Profile"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
 
-                {/* Menu Items */}
-                <div className="space-y-2">
-                  {/* About Button */}
-                  <button
-                    onClick={() => {
-                      setShowAboutModal(true);
-                      setShowUserMenu(false);
-                    }}
-                    className={`w-full cursor-pointer text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
-                  >
-                    About
-                  </button>
+                    {/* Menu Items */}
+                    <div className="space-y-2">
+                      {/* About Button */}
+                      <button
+                        onClick={() => {
+                          setShowAboutModal(true);
+                          setShowUserMenu(false);
+                        }}
+                        className={`w-full cursor-pointer text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
+                      >
+                        About
+                      </button>
 
-                  {/* Contact Us Button */}
-                  <button
-                    onClick={() => {
-                      setShowContactModal(true);
-                      setShowUserMenu(false);
-                    }}
-                    className={`w-full cursor-pointer text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
-                  >
-                    Contact Us
-                  </button>
+                      {/* Contact Us Button */}
+                      <button
+                        onClick={() => {
+                          setShowContactModal(true);
+                          setShowUserMenu(false);
+                        }}
+                        className={`w-full cursor-pointer text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
+                      >
+                        Contact Us
+                      </button>
 
-                  {/* Theme Toggle Button */}
-                  <button
-                    onClick={toggleTheme}
-                    className={`w-full cursor-pointer flex items-center justify-between px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
-                  >
-                    <span>Theme</span>
-                    {theme === 'dark' ? <FaMoon className="text-sm" /> : <FaSun className="text-sm text-yellow-500" />}
-                  </button>
+                      {/* Logout Button */}
+                      <button
+                        onClick={handleLogout}
+                        className="w-full cursor-pointer text-left px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-all duration-200 font-semibold text-white mt-2"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  /* ===== GUEST USER MODAL ===== */
+                  <>
+                    {/* Guest Welcome */}
+                    <div className="flex flex-col items-center mb-4 pb-3 border-b border-[#262626]">
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#10B981]/20 to-[#6EE7B7]/10 flex items-center justify-center border border-[#10B981]/30 mb-3">
+                        <FaUser className="text-[#10B981] text-xl" />
+                      </div>
+                      <p className="text-base font-semibold text-white text-center">Hey there, welcome! 👋</p>
+                      <p className="text-xs text-[#71717A] text-center mt-1">Join us to unlock the full experience</p>
+                    </div>
 
-                  {/* Logout Button */}
-                  <button
-                    onClick={handleLogout}
-                    className="w-full cursor-pointer text-left px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 transition-all duration-200 font-semibold text-white mt-2"
-                  >
-                    Logout
-                  </button>
-                </div>
+                    {/* Sign Up / Sign In Buttons */}
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => { setShowUserMenu(false); navigate('/signup'); }}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#10B981] hover:bg-[#059669] text-[#0A0A0A] font-bold uppercase tracking-wider text-xs transition-all duration-200 cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.1)] hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] active:scale-[0.97]"
+                      >
+                        <FiUserPlus className="text-base" />
+                        Sign Up
+                      </button>
+                      <button
+                        onClick={() => { setShowUserMenu(false); navigate('/login'); }}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-[#151515] border border-[#262626] hover:border-[#10B981]/40 text-white font-semibold uppercase tracking-wider text-xs transition-all duration-200 cursor-pointer hover:bg-[#1A1A1A] active:scale-[0.97]"
+                      >
+                        <FiLogIn className="text-base" />
+                        Sign In
+                      </button>
+                    </div>
+
+                    {/* About & Contact still available */}
+                    <div className="space-y-2 mt-3 pt-3 border-t border-[#262626]">
+                      <button
+                        onClick={() => {
+                          setShowAboutModal(true);
+                          setShowUserMenu(false);
+                        }}
+                        className={`w-full cursor-pointer text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
+                      >
+                        About
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowContactModal(true);
+                          setShowUserMenu(false);
+                        }}
+                        className={`w-full cursor-pointer text-left px-4 py-2 rounded-lg transition-all duration-200 font-medium ${hoverClass} ${textClass}`}
+                      >
+                        Contact Us
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -367,21 +390,36 @@ const Navbar = ({ setIsAuthenticated }) => {
 
       {/* Sidebar for Mobile */}
       {isMenuOpen && (
-        <div className={`fixed top-0 right-0 h-[45vh] w-[60%] z-50 p-6 flex flex-col gap-5 shadow-lg transition-transform duration-300 ${theme === 'dark' ? 'bg-slate-900 text-white' : 'bg-white text-gray-900'}`}>
+        <div className="fixed top-0 right-0 h-[45vh] w-[60%] z-50 p-6 flex flex-col gap-5 shadow-lg transition-transform duration-300 bg-[#111111] border-l border-[#262626] text-[#FFFFFF]">
           <IoClose
             onClick={menuClickHandler}
             className='self-end text-2xl cursor-pointer hover:text-red-400'
           />
           <NavLink to="/" onClick={menuClickHandler}>Home</NavLink>
           <NavLink to="/MostWanted" onClick={menuClickHandler}>Most Wanted</NavLink>
-          <NavLink to="/Trending" onClick={menuClickHandler}>Trending</NavLink>
-          <NavLink to="/Favourites" onClick={menuClickHandler}>Favourites</NavLink>
-          <NavLink to="/Cart" onClick={menuClickHandler}>Cart</NavLink>
+          {isAuthenticated ? (
+            <NavLink to="/Trending" onClick={menuClickHandler}>Trending</NavLink>
+          ) : (
+            <button onClick={() => { menuClickHandler(); setShowAuthPopup(true); }} className="text-left cursor-pointer bg-transparent border-none text-inherit">Trending</button>
+          )}
+          {isAuthenticated ? (
+            <NavLink to="/Favourites" onClick={menuClickHandler}>Favourites</NavLink>
+          ) : (
+            <button onClick={() => { menuClickHandler(); setShowAuthPopup(true); }} className="text-left cursor-pointer bg-transparent border-none text-inherit">Favourites</button>
+          )}
+          {isAuthenticated ? (
+            <NavLink to="/Cart" onClick={menuClickHandler}>Cart</NavLink>
+          ) : (
+            <button onClick={() => { menuClickHandler(); setShowAuthPopup(true); }} className="text-left cursor-pointer bg-transparent border-none text-inherit">Cart</button>
+          )}
 
           {/* Filter Button (for mobile) */}
           <button
-            onClick={() => setShowFilter(!showFilter)}
-            className="flex items-center gap-2 mt-3"
+            onClick={() => {
+              setShowFilter(true);
+              setIsMenuOpen(false);
+            }}
+            className="flex items-center gap-2 mt-3 cursor-pointer"
           >
             <FaFilter className="text-xl" /> Filter
             {selectedCategories.length > 0 && (
@@ -390,54 +428,6 @@ const Navbar = ({ setIsAuthenticated }) => {
               </span>
             )}
           </button>
-
-          {showFilter && (
-            <div className={`rounded-lg p-3 mt-2 ${theme === 'dark' ? 'bg-slate-800' : 'bg-gradient-to-br from-white to-gray-50'}`}>
-              {/* Mobile Filter Content - simplified for brevity, reusing logic */}
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-bold text-sm">Categories</span>
-                {selectedCategories.length > 0 && (
-                  <button
-                    onClick={() => setSelectedCategories([])}
-                    className="text-xs text-blue-600 font-semibold"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-              <div className="space-y-2">
-                {categories.map((cat) => {
-                  const isSelected = selectedCategories.includes(cat);
-                  return (
-                    <label
-                      key={cat}
-                      className={`flex items-center gap-2 p-2 rounded cursor-pointer ${isSelected ? 'bg-blue-100' : hoverClass}`}
-                    >
-                      <div className="relative">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => handleCategoryChange(cat)}
-                          className="sr-only"
-                        />
-                        <div
-                          className={`w-4 h-4 rounded border-2 flex items-center justify-center ${isSelected
-                            ? 'bg-blue-600 border-blue-600'
-                            : `${theme === 'dark' ? 'bg-slate-700 border-slate-500' : 'bg-white border-gray-300'}`
-                            }`}
-                        >
-                          {isSelected && <MdCheck className="text-white text-xs" />}
-                        </div>
-                      </div>
-                      <span className={`capitalize text-sm ${isSelected ? 'text-blue-700 font-medium' : textClass}`}>
-                        {cat}
-                      </span>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -463,9 +453,9 @@ const Navbar = ({ setIsAuthenticated }) => {
             </p>
 
             {/* Creator Section */}
-            <div className={`mt-6 pt-4 border-t ${theme === 'dark' ? 'border-slate-600' : 'border-gray-300'}`}>
+            <div className="mt-6 pt-4 border-t border-[#262626]">
               <p className="text-sm opacity-75 mb-2">Created by</p>
-              <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <p className="text-2xl font-bold bg-gradient-to-r from-[#10B981] to-[#6EE7B7] bg-clip-text text-transparent">
                 SATYAM SONI
               </p>
             </div>
@@ -480,53 +470,53 @@ const Navbar = ({ setIsAuthenticated }) => {
           <div className={`rounded-2xl shadow-2xl w-[90%] max-w-md p-8 relative ${modalBgClass}`} onClick={(e) => e.stopPropagation()}>
             <button
               onClick={() => setShowContactModal(false)}
-              className={`absolute top-4 right-4 transition-colors ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'}`}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
             >
               <IoClose className="text-2xl" />
             </button>
             <h2 className="text-3xl font-bold mb-6">Contact Us</h2>
             <form className="space-y-4" onSubmit={handleContactSubmit}>
               <div>
-                <label className="block text-sm font-medium mb-1 opacity-90">Name</label>
+                <label className="block text-sm font-medium mb-1 opacity-90 text-[#A1A1AA]">Name</label>
                 <input
                   type="text"
                   placeholder="Your name"
                   value={contactFormData.name}
                   onChange={(e) => setContactFormData({ ...contactFormData, name: e.target.value })}
                   required
-                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400 ${inputBgClass}`}
+                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-1 focus:ring-[#10B981]/30 focus:border-[#10B981] ${inputBgClass}`}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 opacity-90">Email</label>
+                <label className="block text-sm font-medium mb-1 opacity-90 text-[#A1A1AA]">Email</label>
                 <input
                   type="email"
                   placeholder="Your email"
                   value={contactFormData.email}
                   onChange={(e) => setContactFormData({ ...contactFormData, email: e.target.value })}
                   required
-                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400 ${inputBgClass}`}
+                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-1 focus:ring-[#10B981]/30 focus:border-[#10B981] ${inputBgClass}`}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1 opacity-90">Message</label>
+                <label className="block text-sm font-medium mb-1 opacity-90 text-[#A1A1AA]">Message</label>
                 <textarea
                   placeholder="Your message"
                   rows="4"
                   value={contactFormData.message}
                   onChange={(e) => setContactFormData({ ...contactFormData, message: e.target.value })}
                   required
-                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-400 resize-none ${inputBgClass}`}
+                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-1 focus:ring-[#10B981]/30 focus:border-[#10B981] resize-none ${inputBgClass}`}
                 ></textarea>
               </div>
               <button
                 type="submit"
                 disabled={contactLoading}
-                className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 rounded-lg hover:scale-105 transition-transform duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                className="w-full bg-[#10B981] hover:bg-[#059669] text-[#0A0A0A] font-bold py-3 rounded-lg hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 shadow-[0_0_15px_rgba(16,185,129,0.1)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 uppercase tracking-wider cursor-pointer"
               >
                 {contactLoading ? (
                   <div className="flex items-center justify-center gap-2">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-5 h-5 border-2 border-[#0A0A0A] border-t-transparent rounded-full animate-spin"></div>
                     Sending...
                   </div>
                 ) : (
@@ -538,6 +528,58 @@ const Navbar = ({ setIsAuthenticated }) => {
         </div>,
         document.body
       )}
+
+      {/* Auth Required Popup (for protected nav links) */}
+      {showAuthPopup && createPortal(
+        <div
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] animate-fadeIn"
+          onClick={() => setShowAuthPopup(false)}
+        >
+          <div
+            className="relative bg-[#111111] border border-[#262626] rounded-2xl shadow-[0_0_60px_rgba(16,185,129,0.08)] p-8 w-[90%] max-w-sm animate-popIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowAuthPopup(false)}
+              className="absolute top-4 right-4 text-[#71717A] hover:text-white transition-colors cursor-pointer"
+            >
+              <IoClose className="text-xl" />
+            </button>
+
+            <div className="flex justify-center mb-5">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#10B981]/20 to-[#6EE7B7]/10 flex items-center justify-center border border-[#10B981]/30">
+                <svg className="w-8 h-8 text-[#10B981]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+            </div>
+
+            <h3 className="text-xl font-bold text-white text-center mb-2">Members Only!</h3>
+            <p className="text-[#A1A1AA] text-center text-sm mb-6">
+              Sign up to access Trending, Favourites, Cart & more.
+            </p>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => { setShowAuthPopup(false); navigate('/signup'); }}
+                className="w-full py-3 rounded-xl bg-[#10B981] hover:bg-[#059669] text-[#0A0A0A] font-bold uppercase tracking-wider text-sm transition-all duration-200 cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:shadow-[0_0_30px_rgba(16,185,129,0.25)] active:scale-[0.97]"
+              >
+                Sign Up
+              </button>
+              <button
+                onClick={() => { setShowAuthPopup(false); navigate('/login'); }}
+                className="w-full py-3 rounded-xl bg-[#151515] border border-[#262626] hover:border-[#10B981]/40 text-white font-semibold uppercase tracking-wider text-sm transition-all duration-200 cursor-pointer hover:bg-[#1A1A1A] active:scale-[0.97]"
+              >
+                Sign In
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Render the Sidebar Portal */}
+      <FilterSidebar isOpen={showFilter} onClose={() => setShowFilter(false)} />
     </div>
   );
 };

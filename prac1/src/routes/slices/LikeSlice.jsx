@@ -1,40 +1,84 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// Load favorites from localStorage
-const loadLikesFromLocalStorage = () => {
-    try {
-        const savedLikes = localStorage.getItem('favorites');
-        return savedLikes ? JSON.parse(savedLikes) : [];
-    } catch (error) {
-        console.error('Error loading favorites from localStorage:', error);
-        return [];
-    }
-};
+const BASE_URL = window.location.hostname === "localhost"
+    ? "http://localhost:4000"
+    : "https://ecomzy-shop-full-stack.onrender.com";
 
-// Save favorites to localStorage
-const saveLikesToLocalStorage = (likes) => {
+// ========== Async Thunks ==========
+
+// Fetch favourites from MongoDB
+export const fetchFavourites = createAsyncThunk("like/fetchFavourites", async (_, { rejectWithValue }) => {
     try {
-        localStorage.setItem('favorites', JSON.stringify(likes));
+        const res = await fetch(`${BASE_URL}/api/v1/favourites`, {
+            method: "GET",
+            credentials: "include",
+        });
+        const data = await res.json();
+        if (data.success) return data.favourites;
+        return rejectWithValue(data.message);
     } catch (error) {
-        console.error('Error saving favorites to localStorage:', error);
+        return rejectWithValue(error.message);
     }
-};
+});
+
+// Add product to favourites in MongoDB
+export const addToFavAPI = createAsyncThunk("like/addToFavAPI", async ({ productId, title, category }, { rejectWithValue }) => {
+    try {
+        const res = await fetch(`${BASE_URL}/api/v1/favourites/add`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ productId, title, category }),
+        });
+        const data = await res.json();
+        if (data.success) return data.favourites;
+        return rejectWithValue(data.message);
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
+});
+
+// Remove product from favourites in MongoDB
+export const removeFromFavAPI = createAsyncThunk("like/removeFromFavAPI", async (productId, { rejectWithValue }) => {
+    try {
+        const res = await fetch(`${BASE_URL}/api/v1/favourites/remove`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({ productId }),
+        });
+        const data = await res.json();
+        if (data.success) return data.favourites;
+        return rejectWithValue(data.message);
+    } catch (error) {
+        return rejectWithValue(error.message);
+    }
+});
+
+// ========== Slice ==========
 
 export const LikeSlice = createSlice({
     name: "like",
-    initialState: loadLikesFromLocalStorage(), // Load from localStorage on init
+    initialState: [], // Starts empty, hydrated from API after login
     reducers: {
-        addLike: (state, action) => {
-            state.push(action.payload);
-            saveLikesToLocalStorage(state); // Save after adding
+        // Clear favourites locally (used on logout without API call)
+        clearFavouritesLocal: () => {
+            return [];
         },
-        removeDislike: (state, action) => {
-            const newState = state.filter((item) => item.id != action.payload.id);
-            saveLikesToLocalStorage(newState); // Save after removing
-            return newState;
-        }
-    }
-})
+    },
+    extraReducers: (builder) => {
+        builder
+            .addCase(fetchFavourites.fulfilled, (state, action) => {
+                return action.payload; // Replace state with fetched favourite IDs
+            })
+            .addCase(addToFavAPI.fulfilled, (state, action) => {
+                return action.payload; // Replace state with updated favourites from server
+            })
+            .addCase(removeFromFavAPI.fulfilled, (state, action) => {
+                return action.payload;
+            });
+    },
+});
 
-export const { addLike, removeDislike } = LikeSlice.actions;
+export const { clearFavouritesLocal } = LikeSlice.actions;
 export default LikeSlice.reducer;

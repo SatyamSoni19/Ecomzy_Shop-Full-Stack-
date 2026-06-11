@@ -3,8 +3,8 @@ import { FaRobot, FaPaperPlane, FaTimes, FaShoppingBag, FaHeart, FaExternalLinkA
 import { AppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { add } from '../routes/slices/CartSlice';
-import { addLike } from '../routes/slices/LikeSlice';
+import { addToCartAPI } from '../routes/slices/CartSlice';
+import { addToFavAPI } from '../routes/slices/LikeSlice';
 import { toast } from 'react-toastify';
 
 const Chatbot = () => {
@@ -123,12 +123,12 @@ const Chatbot = () => {
     };
 
     const handleAddToCart = (product) => {
-        dispatch(add(product));
+        dispatch(addToCartAPI({ productId: product.id, title: product.title, category: product.category }));
         toast.success(`${product.title} added to cart!`);
     };
 
     const handleAddToFavorites = (product) => {
-        dispatch(addLike(product));
+        dispatch(addToFavAPI({ productId: product.id, title: product.title, category: product.category }));
         toast.info(`${product.title} added to favorites!`);
     };
 
@@ -149,18 +149,18 @@ const Chatbot = () => {
         setInput(reply);
     };
 
-    // Theme classes
-    const bgClass = theme === 'dark' ? 'bg-slate-800' : 'bg-white';
-    const textClass = theme === 'dark' ? 'text-white' : 'text-gray-800';
-    const borderClass = theme === 'dark' ? 'border-slate-700' : 'border-gray-200';
-    const inputBgClass = theme === 'dark' ? 'bg-slate-700 text-white' : 'bg-gray-100 text-gray-800';
+    // Premium dark luxury theme styles
+    const bgClass = 'bg-[#111111]';
+    const textClass = 'text-[#FFFFFF]';
+    const borderClass = 'border-[#262626]';
+    const inputBgClass = 'bg-[#151515] text-[#FFFFFF] placeholder-[#71717A] border border-[#262626] focus:border-[#10B981]';
 
     return (
         <>
             {/* Backdrop Blur Overlay */}
             {isOpen && (
                 <div
-                    className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
                     onClick={() => setIsOpen(false)}
                 />
             )}
@@ -170,28 +170,28 @@ const Chatbot = () => {
                 {isOpen && (
                     <div className={`mb-4 w-full sm:w-[380px] md:w-[400px] h-[70vh] sm:h-[400px] md:h-[420px] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-slideUp border ${bgClass} ${borderClass}`}>
                         {/* Header */}
-                        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 sm:p-4 flex justify-between items-center text-white">
+                        <div className="bg-[#111111] border-b border-[#262626] p-3 sm:p-4 flex justify-between items-center text-white">
                             <div className="flex items-center gap-2">
-                                <div className="bg-white/20 p-1.5 sm:p-2 rounded-full">
+                                <div className="bg-[#151515] border border-[#262626] p-1.5 sm:p-2 rounded-full text-[#10B981]">
                                     <FaRobot className="text-lg sm:text-xl" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-xs sm:text-sm">AI Stylist</h3>
-                                    <p className="text-[10px] sm:text-xs opacity-80">Always online</p>
+                                    <h3 className="font-bold text-xs sm:text-sm tracking-wider uppercase">AI Stylist</h3>
+                                    <p className="text-[10px] sm:text-xs text-[#10B981] opacity-90">Always online</p>
                                 </div>
                             </div>
-                            <button onClick={() => setIsOpen(false)} className="hover:bg-white/20 p-1 rounded-full transition">
+                            <button onClick={() => setIsOpen(false)} className="hover:bg-[#151515] p-1 rounded-full transition text-white">
                                 <FaTimes className="text-lg sm:text-xl" />
                             </button>
                         </div>
 
                         {/* Messages Area */}
-                        <div className={`flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 ${theme === 'dark' ? 'bg-slate-900/50' : 'bg-gray-50'}`}>
+                        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 bg-[#0A0A0A]">
                             {messages.map((msg, index) => (
                                 <div key={index} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[90%] sm:max-w-[85%] rounded-2xl p-2 sm:p-3 text-xs sm:text-sm ${msg.sender === 'user'
-                                        ? 'bg-blue-600 text-white rounded-br-none'
-                                        : `${theme === 'dark' ? 'bg-slate-700 text-gray-100' : 'bg-white text-gray-800 border border-gray-200'} rounded-bl-none shadow-sm`
+                                        ? 'bg-[#10B981]/25 border border-[#10B981]/40 text-[#FFFFFF] rounded-br-none'
+                                        : 'bg-[#151515] border border-[#262626] text-[#FFFFFF] rounded-bl-none shadow-sm'
                                         }`}>
                                         <p className="whitespace-pre-line">{msg.text}</p>
 
@@ -201,24 +201,24 @@ const Chatbot = () => {
                                                 {msg.products.map(product => (
                                                     <div
                                                         key={product.id}
-                                                        className={`flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg ${theme === 'dark' ? 'bg-slate-800' : 'bg-gray-50'}`}
+                                                        className="flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg bg-[#111111] border border-[#262626]"
                                                     >
-                                                        <img src={product.image} alt={product.title} className="w-10 h-10 sm:w-12 sm:h-12 object-contain bg-white rounded flex-shrink-0" />
+                                                        <img src={product.image} alt={product.title} className="w-10 h-10 sm:w-12 sm:h-12 object-contain bg-white rounded flex-shrink-0 p-1" />
                                                         <div className="flex-1 overflow-hidden min-w-0">
-                                                            <p className="font-bold text-[10px] sm:text-xs truncate">{product.title}</p>
-                                                            <p className="text-[10px] sm:text-xs text-green-500 font-bold">${product.price}</p>
+                                                            <p className="font-bold text-[10px] sm:text-xs truncate text-white">{product.title}</p>
+                                                            <p className="text-[10px] sm:text-xs text-[#10B981] font-bold">${product.price}</p>
                                                             <div className="flex gap-0.5 sm:gap-1 mt-1 flex-wrap">
                                                                 <button
                                                                     onClick={() => handleAddToCart(product)}
-                                                                    className="text-[10px] sm:text-xs bg-blue-600 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-blue-700 transition flex items-center gap-0.5 sm:gap-1"
+                                                                    className="text-[10px] sm:text-xs bg-[#10B981] hover:bg-[#059669] text-[#0A0A0A] px-2.5 py-1 rounded transition duration-200 flex items-center gap-1 font-bold cursor-pointer"
                                                                     title="Add to Cart"
                                                                 >
                                                                     <FaShoppingBag className="text-[8px] sm:text-[10px]" />
-                                                                    <span className="hidden xs:inline">Cart</span>
+                                                                    <span>Cart</span>
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleAddToFavorites(product)}
-                                                                    className="text-[10px] sm:text-xs bg-pink-600 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-pink-700 transition flex items-center gap-0.5"
+                                                                    className="text-[10px] sm:text-xs bg-[#151515] text-[#10B981] border border-[#10B981]/30 hover:bg-[#10B981]/10 px-2 py-1 rounded transition flex items-center gap-0.5 cursor-pointer"
                                                                     title="Add to Favorites"
                                                                 >
                                                                     <FaHeart className="text-[8px] sm:text-[10px]" />
@@ -226,7 +226,7 @@ const Chatbot = () => {
                                                                 {product.productUrl && (
                                                                     <button
                                                                         onClick={() => handleViewProduct(product)}
-                                                                        className="text-[10px] sm:text-xs bg-gray-600 text-white px-1.5 sm:px-2 py-0.5 sm:py-1 rounded hover:bg-gray-700 transition flex items-center gap-0.5"
+                                                                        className="text-[10px] sm:text-xs bg-[#151515] text-white border border-[#262626] hover:bg-[#262626] px-2 py-1 rounded transition flex items-center gap-0.5 cursor-pointer"
                                                                         title="View on Store"
                                                                     >
                                                                         <FaExternalLinkAlt className="text-[8px] sm:text-[10px]" />
@@ -244,11 +244,11 @@ const Chatbot = () => {
 
                             {isTyping && (
                                 <div className="flex justify-start">
-                                    <div className={`${theme === 'dark' ? 'bg-slate-700' : 'bg-white'} p-2 sm:p-3 rounded-2xl rounded-bl-none shadow-sm border ${borderClass}`}>
+                                    <div className="bg-[#151515] p-2 sm:p-3 rounded-2xl rounded-bl-none shadow-sm border border-[#262626]">
                                         <div className="flex gap-1">
-                                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#10B981] rounded-full animate-bounce"></div>
+                                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#10B981] rounded-full animate-bounce delay-100"></div>
+                                            <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-[#10B981] rounded-full animate-bounce delay-200"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -258,14 +258,14 @@ const Chatbot = () => {
 
                         {/* Quick Replies */}
                         {messages.length <= 2 && (
-                            <div className={`px-2 sm:px-3 py-1.5 sm:py-2 border-t ${borderClass} ${bgClass}`}>
-                                <p className={`text-[10px] sm:text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mb-1 sm:mb-2`}>Quick searches:</p>
+                            <div className={`px-2 sm:px-3 py-1.5 sm:py-2 border-t border-[#262626] ${bgClass}`}>
+                                <p className="text-[10px] sm:text-xs text-[#71717A] mb-1 sm:mb-2 uppercase tracking-wider">Quick searches:</p>
                                 <div className="flex gap-1 sm:gap-2 flex-wrap">
                                     {quickReplies.map((reply, idx) => (
                                         <button
                                             key={idx}
                                             onClick={() => handleQuickReply(reply)}
-                                            className="text-[10px] sm:text-xs bg-blue-100 text-blue-700 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full hover:bg-blue-200 transition"
+                                            className="text-[10px] sm:text-xs bg-[#151515] border border-[#262626] text-[#10B981] px-2.5 sm:px-3 py-1 rounded-full hover:bg-[#10B981]/10 transition cursor-pointer"
                                         >
                                             {reply}
                                         </button>
@@ -275,19 +275,19 @@ const Chatbot = () => {
                         )}
 
                         {/* Input Area */}
-                        <form onSubmit={handleSend} className={`p-2 sm:p-3 border-t ${borderClass} ${bgClass}`}>
+                        <form onSubmit={handleSend} className={`p-2 sm:p-3 border-t border-[#262626] ${bgClass}`}>
                             <div className="flex gap-1.5 sm:gap-2">
                                 <input
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     placeholder="Ask me anything..."
-                                    className={`flex-1 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${inputBgClass}`}
+                                    className={`flex-1 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#10B981]/30 ${inputBgClass}`}
                                 />
                                 <button
                                     type="submit"
                                     disabled={!input.trim()}
-                                    className="bg-blue-600 text-white p-1.5 sm:p-2 rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                    className="bg-[#10B981] text-[#0A0A0A] p-2 rounded-full hover:bg-[#059669] disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer flex items-center justify-center w-8 h-8"
                                 >
                                     <FaPaperPlane className="text-xs sm:text-sm" />
                                 </button>
@@ -299,13 +299,13 @@ const Chatbot = () => {
                 {/* Floating Button */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="group relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:scale-110 transition-transform duration-300 focus:outline-none focus:ring-4 focus:ring-blue-300 ml-auto mr-2 sm:mr-0"
+                    className="group relative flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 bg-[#10B981] text-[#0A0A0A] hover:bg-[#059669] rounded-full shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:scale-110 transition-transform duration-300 focus:outline-none focus:ring-2 focus:ring-[#10B981]/30 ml-auto mr-2 sm:mr-0 cursor-pointer"
                 >
                     {isOpen ? <FaTimes className="text-lg sm:text-xl" /> : <FaRobot className="text-xl sm:text-2xl animate-pulse" />}
 
                     {/* Tooltip */}
                     {!isOpen && (
-                        <span className="hidden sm:block absolute right-16 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                        <span className="hidden sm:block absolute right-16 bg-[#111111] border border-[#262626] text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                             Ask AI Stylist
                         </span>
                     )}
