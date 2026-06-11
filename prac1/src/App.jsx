@@ -13,12 +13,14 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import { AppContext } from './context/AppContext';
 import Chatbot from './components/Chatbot';
+import CustomCursor from './components/CustomCursor';
 import Footer from './components/Footer';
 import ProductDetail from './pages/ProductDetail';
 import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './pages/AdminDashboard';
 import { fetchCart, clearCartLocal } from './routes/slices/CartSlice';
 import { fetchFavourites, clearFavouritesLocal } from './routes/slices/LikeSlice';
+import GoogleSuccess from './pages/GoogleSuccess';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -80,6 +82,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#FFFFFF]">
+      <CustomCursor />
       {/* Navbar always visible — adapts UI based on auth state */}
       <div className="sticky top-0 z-50 bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#262626]">
         <Navbar setIsAuthenticated={setIsAuthenticated} isAuthenticated={isAuthenticated} />
@@ -89,6 +92,7 @@ function App() {
         {/* Login aur Signup me setIsAuthenticated pass karo */}
         <Route path="/login" element={!isAuthenticated ? <Login setIsAuthenticated={setIsAuthenticated} /> : <Navigate to="/" />} />
         <Route path="/signup" element={!isAuthenticated ? <Signup /> : <Navigate to="/" />} />
+        <Route path="/google-success" element={<GoogleSuccess setIsAuthenticated={setIsAuthenticated} />} />
 
         {/* Home & MostWanted are always accessible (even for guests) */}
         <Route path="/" element={<Home />} />

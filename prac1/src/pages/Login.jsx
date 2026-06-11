@@ -2,7 +2,7 @@ import React, { useState, useContext } from "react";
 import { useNavigate, NavLink } from "react-router-dom";
 import { toast } from "react-toastify";
 import { AppContext } from "../context/AppContext";
-import { FaEnvelope, FaLock, FaArrowRight, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaArrowRight, FaEye, FaEyeSlash, FaGoogle } from "react-icons/fa";
 
 const Login = ({ setIsAuthenticated }) => {
   const navigate = useNavigate();
@@ -18,6 +18,10 @@ const Login = ({ setIsAuthenticated }) => {
   const BASE_URL = window.location.hostname === "localhost"
     ? "http://localhost:4000"
     : "https://ecomzy-shop-full-stack.onrender.com";
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${BASE_URL}/api/v1/auth/google`;
+  };
 
   const submitHandler = async (e) => {
     e.preventDefault();
@@ -72,6 +76,23 @@ const Login = ({ setIsAuthenticated }) => {
             Welcome Back
           </h1>
           <p className="text-[#A1A1AA] text-sm tracking-wide">Sign in to continue your journey</p>
+        </div>
+
+        {/* Google OAuth Button */}
+        <button
+          type="button"
+          onClick={handleGoogleLogin}
+          className="w-full flex items-center justify-center gap-3 py-3 px-4 mb-6 text-sm font-semibold rounded-lg bg-[#1A1A1A] border border-[#333333] text-[#FFFFFF] hover:bg-[#222222] hover:border-[#10B981]/40 focus:outline-none focus:ring-1 focus:ring-[#10B981]/30 transition-all duration-300 transform active:scale-[0.98] cursor-pointer"
+        >
+          <FaGoogle className="text-lg" style={{ color: "#4285F4" }} />
+          <span>Continue with Google</span>
+        </button>
+
+        {/* Divider */}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="flex-1 h-px bg-[#262626]"></div>
+          <span className="text-xs text-[#71717A] uppercase tracking-wider font-medium">or</span>
+          <div className="flex-1 h-px bg-[#262626]"></div>
         </div>
 
         <form className="space-y-6" onSubmit={submitHandler}>

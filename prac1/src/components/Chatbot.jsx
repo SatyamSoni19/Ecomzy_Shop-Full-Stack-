@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { FaRobot, FaPaperPlane, FaTimes, FaShoppingBag, FaHeart, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaRobot, FaPaperPlane, FaTimes, FaShoppingBag, FaHeart } from 'react-icons/fa';
 import { AppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -7,15 +7,20 @@ import { addToCartAPI } from '../routes/slices/CartSlice';
 import { addToFavAPI } from '../routes/slices/LikeSlice';
 import { toast } from 'react-toastify';
 
+const BASE_URL = window.location.hostname === "localhost"
+    ? "http://localhost:4000"
+    : "https://ecomzy-shop-full-stack.onrender.com";
+
 const Chatbot = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { text: "Hi there! I'm your AI Personal Stylist. 🤖 Tell me what you're looking for! Try: 'nike shoes', 'headphones under $200', 'gaming laptop', or 'show me sneakers'", sender: 'bot' }
+        { text: "Hi there! I'm your AI Shopping Assistant. 🤖 Tell me what you're looking for! Try: 'gaming laptops under $2000', 'best headphones for gym', 'compare iPhone and Samsung', or 'show me sneakers'", sender: 'bot' }
     ]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [chatHistory, setChatHistory] = useState([]);
     const messagesEndRef = useRef(null);
-    const { products, theme } = useContext(AppContext);
+    const { allProducts, theme } = useContext(AppContext);
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
@@ -27,115 +32,84 @@ const Chatbot = () => {
         scrollToBottom();
     }, [messages, isOpen]);
 
-    // Parse price from query
-    const parsePriceFilter = (query) => {
-        const lowerQuery = query.toLowerCase();
-        let minPrice = 0;
-        let maxPrice = Infinity;
-
-        // Match patterns like "under $100", "below 200", "less than $50"
-        const underMatch = lowerQuery.match(/(?:under|below|less than|cheaper than)\s*\$?(\d+)/);
-        if (underMatch) {
-            maxPrice = parseFloat(underMatch[1]);
-        }
-
-        // Match patterns like "over $100", "above 200", "more than $50"
-        const overMatch = lowerQuery.match(/(?:over|above|more than|expensive than)\s*\$?(\d+)/);
-        if (overMatch) {
-            minPrice = parseFloat(overMatch[1]);
-        }
-
-        // Match patterns like "between $50 and $100", "from 50 to 100"
-        const betweenMatch = lowerQuery.match(/(?:between|from)\s*\$?(\d+)\s*(?:and|to|-)\s*\$?(\d+)/);
-        if (betweenMatch) {
-            minPrice = parseFloat(betweenMatch[1]);
-            maxPrice = parseFloat(betweenMatch[2]);
-        }
-
-        return { minPrice, maxPrice };
-    };
-
     const handleSend = async (e) => {
         e.preventDefault();
-        if (!input.trim()) return;
+        if (!input.trim() || isTyping) return;
 
-        const userMessage = input;
+        const userMessage = input.trim();
         setMessages(prev => [...prev, { text: userMessage, sender: 'user' }]);
         setInput("");
         setIsTyping(true);
 
-        // Simulate AI thinking delay
-        setTimeout(() => {
-            const recommendations = findProducts(userMessage);
+        // Update chat history with user message
+        const updatedHistory = [...chatHistory, { role: 'user', text: userMessage }];
 
-            if (recommendations.length > 0) {
+        try {
+            const response = await fetch(`${BASE_URL}/api/v1/chat`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    message: userMessage,
+                    products: allProducts,
+                    chatHistory: updatedHistory.slice(-10),
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                // Map recommended product IDs to actual product objects
+                const recommendedProducts = (data.recommendedProducts || [])
+                    .map(id => allProducts.find(p => p.id === id))
+                    .filter(Boolean)
+                    .slice(0, 5);
+
                 setMessages(prev => [
                     ...prev,
                     {
-                        text: `I found ${recommendations.length} items that match your style! Check these out:`,
+                        text: data.reply,
                         sender: 'bot',
-                        products: recommendations.slice(0, 5) // Show top 5
+                        products: recommendedProducts.length > 0 ? recommendedProducts : undefined,
                     }
+                ]);
+
+                // Update chat history with bot response
+                setChatHistory([
+                    ...updatedHistory,
+                    { role: 'bot', text: data.reply }
                 ]);
             } else {
-                // Suggest categories when no results
-                const categories = [...new Set(products.map(p => p.category))].sort();
-                const categoryList = categories.slice(0, 5).join(', ');
                 setMessages(prev => [
                     ...prev,
-                    {
-                        text: `Hmm, I couldn't find anything matching that exactly. Try searching for:\n\n📦 Categories: ${categoryList}\n💰 Price: "under $100", "between $50-$200"\n🔍 Brands: "nike", "apple", "samsung"`,
-                        sender: 'bot'
-                    }
+                    { text: data.message || "Sorry, I couldn't process that. Please try again!", sender: 'bot' }
                 ]);
             }
+        } catch (error) {
+            console.error("Chat error:", error);
+            setMessages(prev => [
+                ...prev,
+                { text: "Oops! I'm having trouble connecting right now. Please try again in a moment. 🔄", sender: 'bot' }
+            ]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
-    const findProducts = (query) => {
-        const lowerQuery = query.toLowerCase();
-        const keywords = lowerQuery.split(" ").filter(word => word.length > 2); // Ignore small words
-        const { minPrice, maxPrice } = parsePriceFilter(query);
-
-        let results = products.filter(product => {
-            const title = product.title.toLowerCase();
-            const desc = product.description.toLowerCase();
-            const category = product.category.toLowerCase();
-
-            // Check if ANY keyword matches title, description or category
-            const matchesKeywords = keywords.some(keyword =>
-                title.includes(keyword) ||
-                desc.includes(keyword) ||
-                category.includes(keyword)
-            );
-
-            // Check price range
-            const matchesPrice = product.price >= minPrice && product.price <= maxPrice;
-
-            return matchesKeywords && matchesPrice;
-        });
-
-        // Sort by rating (highest first)
-        results.sort((a, b) => (b.rating?.rate || 0) - (a.rating?.rate || 0));
-
-        return results;
-    };
-
-    const handleAddToCart = (product) => {
+    const handleAddToCart = (e, product) => {
+        e.stopPropagation();
         dispatch(addToCartAPI({ productId: product.id, title: product.title, category: product.category }));
         toast.success(`${product.title} added to cart!`);
     };
 
-    const handleAddToFavorites = (product) => {
+    const handleAddToFavorites = (e, product) => {
+        e.stopPropagation();
         dispatch(addToFavAPI({ productId: product.id, title: product.title, category: product.category }));
         toast.info(`${product.title} added to favorites!`);
     };
 
-    const handleViewProduct = (product) => {
-        if (product.productUrl) {
-            window.open(product.productUrl, '_blank', 'noopener,noreferrer');
-        }
+    const handleProductClick = (product) => {
+        navigate(`/product/${product.id}`);
     };
 
     // Quick reply buttons
@@ -201,15 +175,16 @@ const Chatbot = () => {
                                                 {msg.products.map(product => (
                                                     <div
                                                         key={product.id}
-                                                        className="flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg bg-[#111111] border border-[#262626]"
+                                                        onClick={() => handleProductClick(product)}
+                                                        className="flex gap-1.5 sm:gap-2 p-1.5 sm:p-2 rounded-lg bg-[#111111] border border-[#262626] cursor-pointer hover:border-[#10B981]/40 hover:bg-[#151515] transition-all duration-200"
                                                     >
                                                         <img src={product.image} alt={product.title} className="w-10 h-10 sm:w-12 sm:h-12 object-contain bg-white rounded flex-shrink-0 p-1" />
                                                         <div className="flex-1 overflow-hidden min-w-0">
-                                                            <p className="font-bold text-[10px] sm:text-xs truncate text-white">{product.title}</p>
+                                                            <p className="font-bold text-[10px] sm:text-xs truncate text-white hover:text-[#10B981] transition-colors">{product.title}</p>
                                                             <p className="text-[10px] sm:text-xs text-[#10B981] font-bold">${product.price}</p>
                                                             <div className="flex gap-0.5 sm:gap-1 mt-1 flex-wrap">
                                                                 <button
-                                                                    onClick={() => handleAddToCart(product)}
+                                                                    onClick={(e) => handleAddToCart(e, product)}
                                                                     className="text-[10px] sm:text-xs bg-[#10B981] hover:bg-[#059669] text-[#0A0A0A] px-2.5 py-1 rounded transition duration-200 flex items-center gap-1 font-bold cursor-pointer"
                                                                     title="Add to Cart"
                                                                 >
@@ -217,21 +192,12 @@ const Chatbot = () => {
                                                                     <span>Cart</span>
                                                                 </button>
                                                                 <button
-                                                                    onClick={() => handleAddToFavorites(product)}
+                                                                    onClick={(e) => handleAddToFavorites(e, product)}
                                                                     className="text-[10px] sm:text-xs bg-[#151515] text-[#10B981] border border-[#10B981]/30 hover:bg-[#10B981]/10 px-2 py-1 rounded transition flex items-center gap-0.5 cursor-pointer"
                                                                     title="Add to Favorites"
                                                                 >
                                                                     <FaHeart className="text-[8px] sm:text-[10px]" />
                                                                 </button>
-                                                                {product.productUrl && (
-                                                                    <button
-                                                                        onClick={() => handleViewProduct(product)}
-                                                                        className="text-[10px] sm:text-xs bg-[#151515] text-white border border-[#262626] hover:bg-[#262626] px-2 py-1 rounded transition flex items-center gap-0.5 cursor-pointer"
-                                                                        title="View on Store"
-                                                                    >
-                                                                        <FaExternalLinkAlt className="text-[8px] sm:text-[10px]" />
-                                                                    </button>
-                                                                )}
                                                             </div>
                                                         </div>
                                                     </div>
@@ -281,12 +247,13 @@ const Chatbot = () => {
                                     type="text"
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
-                                    placeholder="Ask me anything..."
-                                    className={`flex-1 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#10B981]/30 ${inputBgClass}`}
+                                    placeholder={isTyping ? "AI is thinking..." : "Ask me anything..."}
+                                    disabled={isTyping}
+                                    className={`flex-1 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-[#10B981]/30 disabled:opacity-50 ${inputBgClass}`}
                                 />
                                 <button
                                     type="submit"
-                                    disabled={!input.trim()}
+                                    disabled={!input.trim() || isTyping}
                                     className="bg-[#10B981] text-[#0A0A0A] p-2 rounded-full hover:bg-[#059669] disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer flex items-center justify-center w-8 h-8"
                                 >
                                     <FaPaperPlane className="text-xs sm:text-sm" />

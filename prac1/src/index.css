@@ -139,3 +139,46 @@
   cursor: pointer;
   box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
 }
+
+/* ========== Custom Cursor ========== */
+@media (pointer: fine) {
+  * {
+    cursor: none !important;
+  }
+}
+
+.custom-cursor-ring {
+  position: fixed;
+  width: 36px;
+  height: 36px;
+  border: 2px solid rgba(16, 185, 129, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 99999;
+  transform: translate(-50%, -50%);
+  transition: width 0.2s ease, height 0.2s ease, border-color 0.2s ease, opacity 0.15s ease;
+  mix-blend-mode: difference;
+}
+
+.custom-cursor-dot {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: #10B981;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 100000;
+  transform: translate(-50%, -50%);
+  transition: left 0.15s ease-out, top 0.15s ease-out, width 0.2s ease, height 0.2s ease, opacity 0.15s ease;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.6), 0 0 24px rgba(16, 185, 129, 0.3);
+}
+
+/* Scale up ring when hovering interactive elements */
+@media (pointer: fine) {
+  a:hover ~ .custom-cursor-ring,
+  button:hover ~ .custom-cursor-ring {
+    width: 50px;
+    height: 50px;
+    border-color: rgba(16, 185, 129, 0.7);
+  }
+}

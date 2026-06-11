@@ -123,6 +123,14 @@ exports.login = async (req, res) => {
             })
         }
 
+        // Check if this user registered via Google OAuth (no password set)
+        if (!user.password) {
+            return res.status(400).json({
+                success: false,
+                message: 'This account uses Google login. Please use "Continue with Google" to sign in.',
+            })
+        }
+
         // Now verify password & generate JWT Token
         if (await bcrypt.compare(password, user.password)) {
 
